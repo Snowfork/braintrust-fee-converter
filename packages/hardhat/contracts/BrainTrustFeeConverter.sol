@@ -7,11 +7,13 @@ import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
 import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
 
 contract BrainTrustFeeConverterContract {
-  address public constant treasuryAddress = "";
+  // address public constant treasuryAddress = "";
   address public constant USDC = 0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b;
-  address public constant BTRST = "";
+  address public constant BTRST = 0xc24D9a9CB8Be9e7aB8ab6B8231A3E924aCAB07AF;
 
   ISwapRouter public immutable swapRouter;
+
+  uint24 public constant poolFee = 3000;
 
   constructor(ISwapRouter _swapRouter) {
     swapRouter = _swapRouter;
@@ -39,6 +41,6 @@ contract BrainTrustFeeConverterContract {
 
     // How do we interact with amountOut? 
     // Is it supposed to call a 2nd function in the contract to send?
-    TransferHelper.safeTransfer(USDC, treasuryAddress, amountOut);
+    TransferHelper.safeTransfer(USDC, msg.sender, amountOut);
   }
 }
