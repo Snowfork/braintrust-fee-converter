@@ -24,9 +24,7 @@
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.8",
     "@uniswap/sdk": "^3.0.3",
-    "@uniswap/sdk-core": "^3.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
-    "@uniswap/v3-sdk": "^3.6.2-optimism-regenesis",
     "@walletconnect/web3-provider": "^1.5.2",
     "antd": "4.16.0",
     "apollo-boost": "^0.4.9",
@@ -61,7 +59,10 @@
   "devDependencies": {
     "@apollo/client": "^3.3.21",
     "@testing-library/dom": "^6.12.2",
+    "@types/node": "^16.11.6",
     "@types/react": "^16.9.19",
+    "@uniswap/sdk-core": "^3.0.1",
+    "@uniswap/v3-sdk": "^3.6.2-optimism-regenesis",
     "autoprefixer": "^10.2.4",
     "chalk": "^4.1.0",
     "eslint": "^7.5.0",
@@ -82,7 +83,8 @@
     "less-plugin-npm-import": "^2.1.0",
     "prettier": "^2.0.5",
     "s3-folder-upload": "^2.3.1",
-    "surge": "^0.21.5"
+    "surge": "^0.21.5",
+    "tslib": "^2.3.1"
   },
   "eslintConfig": {
     "extends": "react-app"
