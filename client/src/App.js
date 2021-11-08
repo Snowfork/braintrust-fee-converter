@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Web3 from "web3";
 import { Input, Button, Row, Col } from "antd";
 import { getUSDCBalance } from "./utils/getBalance";
+import logo from "./assets/braintrust.svg";
 import "./App.css";
 
 const App = () => {
@@ -68,7 +69,9 @@ const Converter = () => {
   return (
     <div className="fee-wrapper">
       <Row>
-        <h2>Braintrust Converter</h2>
+        <h2>
+          <img src={logo} /> <span>Fee Converter</span>
+        </h2>
         {accounts.length > 0 ? (
           <>
             <Col span={24}>
@@ -80,6 +83,7 @@ const Converter = () => {
                 placeholder="Enter amount"
                 allowClear
                 value={convertValue}
+                onChange={(e) => setConvertValue(e.target.value)}
               />
               <div style={{ marginTop: "1em" }}>
                 <Button
@@ -88,7 +92,12 @@ const Converter = () => {
                 >
                   Max
                 </Button>
-                <Button onClick={() => onTokenSwap()}>Convert</Button>
+                <Button
+                  disabled={convertValue <= 0}
+                  onClick={() => onTokenSwap()}
+                >
+                  Convert
+                </Button>
               </div>
             </Col>
           </>
