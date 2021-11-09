@@ -38,9 +38,6 @@ contract BrainTrustFeeConverterContract {
 
     // The call to `exactInputSingle` executes the swap.
     amountOut = swapRouter.exactInputSingle(params);
-
-    // How do we interact with amountOut? 
-    // Is it supposed to call a 2nd function in the contract to send?
     TransferHelper.safeTransfer(USDC, TreasuryAddress, amountOut);
   }
 }

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import Web3 from "web3";
 import { Input, Button, Row, Col } from "antd";
-import { getUSDCBalance } from "./utils/getBalance";
+import { getUSDCBalance } from "./utils/usdc";
 import logo from "./assets/braintrust.svg";
+import detectEthereumProvider from "@metamask/detect-provider";
+import { swap } from "./utils/converter";
 import "./App.css";
 
 const App = () => {
@@ -14,57 +16,62 @@ const App = () => {
 };
 
 const Converter = () => {
-  const [accounts, setAccounts] = useState([]);
+  const [account, setAccount] = useState();
   const [balance, setBalance] = useState(0);
   const [convertValue, setConvertValue] = useState(0);
-  const [web3Api, setWeb3Api] = useState({
-    web3: null,
-    provider: null,
-  });
+  const [isRinkeby, setIsRinkeby] = useState(false);
+  const [web3Api, setWeb3Api] = useState(null);
 
-  const loadProvider = async () => {
-    let provider;
-
-    if (window.ethereum) {
-      provider = window.ethereum;
-
-      try {
-        await provider.request({ method: "eth_requestAccounts" });
-      } catch (error) {
-        console.error("User denied account access");
-      }
-    } else if (window.web3) {
-      provider = window.web3.currentProvider;
-    }
-
-    setWeb3Api({
-      web3: new Web3(provider),
-      provider,
-    });
-  };
-
-  const getAccounts = async () => {
-    console.log(web3Api.web3);
-    setAccounts(await web3Api.web3.eth.getAccounts());
-  };
-
-  const onTokenSwap = () => {
-    console.log("swap");
+  const onTokenSwap = async () => {
+    swap(web3Api.provider, convertValue);
   };
 
   useEffect(() => {
+    // Detect whether a provider exists & MetaMask is installed
+    const loadProvider = async () => {
+      const provider = await detectEthereumProvider({ mustBeMetaMask: true });
+
+      if (provider) {
+        setWeb3Api({
+          web3: new Web3(provider),
+          provider,
+        });
+      }
+    };
+
+    // Event listener when account changes to reset provider
+    window.ethereum.on("accountsChanged", async () => {
+      loadProvider();
+    });
+
+    // Event listener when chain changes to reset provider
+    window.ethereum.on("chainChanged", async () => {
+      loadProvider();
+    });
+
     loadProvider();
   }, []);
 
   useEffect(async () => {
-    if (accounts.length > 0) {
-      setBalance(await getUSDCBalance(accounts[0], web3Api.provider));
-    }
-  }, [accounts]);
+    // When provider is reset, acquire the current (first) account connected
+    if (web3Api) {
+      const accounts = await web3Api.provider.request({
+        method: "eth_requestAccounts",
+      });
 
-  useEffect(() => {
-    if (web3Api.web3) getAccounts();
-  }, [web3Api.web3]);
+      // Rinkeby chainId = 4
+      const chainId = await web3Api.web3.eth.net.getId();
+      setIsRinkeby(chainId === 4);
+      setAccount(accounts[0]);
+    } else {
+      console.error("MetaMask is not installed, please install and try again.");
+    }
+  }, [web3Api]);
+
+  useEffect(async () => {
+    // Balance is readjusted based on currently connected account
+    if (account) setBalance(await getUSDCBalance(account, web3Api.provider));
+  }, [account]);
 
   return (
     <div className="fee-wrapper">
@@ -72,42 +79,45 @@ const Converter = () => {
         <h2>
           <img src={logo} /> <span>Fee Converter</span>
         </h2>
-        {accounts.length > 0 ? (
+        {account ? (
           <>
             <Col span={24}>
-              <p>Account: {accounts[0]}</p>
-              <p>USDC Balance: {balance}</p>
+              <p>Account: {account}</p>
+              {isRinkeby && <p>USDC Balance: {balance}</p>}
             </Col>
             <Col span={24}>
-              <Input
-                placeholder="Enter amount"
-                allowClear
-                value={convertValue}
-                onChange={(e) => setConvertValue(e.target.value)}
-              />
-              <div style={{ marginTop: "1em" }}>
-                <Button
-                  style={{ marginRight: "1em" }}
-                  onClick={() => setConvertValue(balance)}
-                >
-                  Max
-                </Button>
-                <Button
-                  disabled={convertValue <= 0}
-                  onClick={() => onTokenSwap()}
-                >
-                  Convert
-                </Button>
-              </div>
+              {isRinkeby ? (
+                <>
+                  <Input
+                    placeholder="Enter amount"
+                    allowClear
+                    value={convertValue}
+                    onChange={(e) => setConvertValue(e.target.value)}
+                  />
+                  <div style={{ marginTop: "1em" }}>
+                    <Button
+                      style={{ marginRight: "1em" }}
+                      onClick={() => setConvertValue(balance)}
+                    >
+                      Max
+                    </Button>
+                    <Button
+                      disabled={convertValue <= 0}
+                      onClick={() => onTokenSwap()}
+                    >
+                      Convert
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <p>Please connect to the Rinkeby testnet</p>
+              )}
             </Col>
           </>
         ) : (
           <Col span={24}>
             <p>
-              Not connected.{" "}
-              <a href="#" onClick={() => loadProvider()}>
-                Connect to MetaMask
-              </a>
+              Not connected. <a href="#">Connect to MetaMask</a>
             </p>
           </Col>
         )}
