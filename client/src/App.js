@@ -1,5 +1,5 @@
 import FeeConverter from "./components/FeeConverter/FeeConverter";
-import "./App.css";
+import "./App.scss";
 
 const App = () => {
   return (

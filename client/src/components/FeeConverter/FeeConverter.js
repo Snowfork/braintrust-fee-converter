@@ -5,8 +5,11 @@ import Web3 from "web3";
 
 import { getUSDCBalance } from "../../utils/usdc";
 import { swap } from "../../utils/converter";
+
 import logo from "../../assets/braintrust.svg";
 import usdc from "../../assets/usdc.svg";
+
+import "./FeeConverter.scss";
 
 const FeeConverter = () => {
   const [account, setAccount] = useState();
@@ -79,71 +82,67 @@ const FeeConverter = () => {
   }, [account, web3Api]);
 
   return (
-    <div className="fee-wrapper">
-      <Row>
-        <h2>
+    <Row className="wrapper">
+      <Col span={24}>
+        <h2 className="wrapper__header">
           <img src={logo} alt="logo" /> <span>Fee Converter</span>
         </h2>
-        {account ? (
-          <>
-            <Col
-              span={24}
-              style={{ borderLeft: "3px solid rgb(131 159 255)", backgroundColor: "#e9e8ff", padding: "1em" }}
-            >
-              <p>Account: {account}</p>
-              {isRinkeby && (
-                <p>
-                  <img src={usdc} height={20} /> USDC Balance: {balance}
-                </p>
-              )}
-            </Col>
-            <Col span={24}>
-              {isRinkeby ? (
-                <>
-                  <Input
-                    style={{ marginTop: "1em" }}
-                    max={balance}
-                    placeholder="Enter amount"
-                    allowClear
-                    value={convertValue}
-                    onChange={(e) => setConvertValue(e.target.value)}
-                  />
-                  <div style={{ marginTop: "1em" }}>
-                    <Button
-                      disabled={convertValue === balance}
-                      style={{ marginRight: "1em" }}
-                      onClick={() => setConvertValue(balance)}
-                    >
-                      Max
-                    </Button>
-                    <Button disabled={convertValue <= 0} onClick={() => onTokenSwap()}>
-                      Convert
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <p>Please connect to the Rinkeby testnet.</p>
-              )}
-            </Col>
-          </>
-        ) : (
-          <Col span={24}>
-            <p>
-              Not connected.{" "}
-              <Button
-                onClick={() =>
-                  web3Api.provider.request({
-                    method: "eth_requestAccounts",
-                  })
-                }
-              >
-                Connect to MetaMask
-              </Button>
-            </p>
+      </Col>
+      {account ? (
+        <>
+          <Col span={24} className="wrapper__info">
+            <p>Account: {account}</p>
+            {isRinkeby && (
+              <p>
+                Balance: {balance} <img src={usdc} alt="usdc" />
+              </p>
+            )}
           </Col>
-        )}
-      </Row>
-    </div>
+          <Col span={24} className="wrapper__input">
+            {isRinkeby ? (
+              <>
+                <Input
+                  max={balance}
+                  placeholder="Enter amount"
+                  allowClear
+                  value={convertValue}
+                  onChange={(e) => setConvertValue(e.target.value)}
+                />
+                <div className="wrapper__buttons">
+                  <Button
+                    className="wrapper__button"
+                    disabled={convertValue === balance}
+                    onClick={() => setConvertValue(balance)}
+                  >
+                    Max
+                  </Button>
+                  <Button className="wrapper__button" disabled={convertValue <= 0} onClick={() => onTokenSwap()}>
+                    Convert
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <p>Please connect to the Rinkeby testnet.</p>
+            )}
+          </Col>
+        </>
+      ) : (
+        <Col span={24} className="wrapper__unconnected">
+          <Row>
+            <p>Not connected.</p>
+            <Button
+              onClick={() =>
+                web3Api.provider.request({
+                  method: "eth_requestAccounts",
+                })
+              }
+            >
+              Connect to MetaMask.
+            </Button>
+          </Row>
+        </Col>
+      )}
+    </Row>
   );
 };
 
