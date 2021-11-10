@@ -38,6 +38,6 @@ contract BrainTrustFeeConverterContract {
 
     // The call to `exactInputSingle` executes the swap.
     amountOut = swapRouter.exactInputSingle(params);
-    TransferHelper.safeTransfer(USDC, TreasuryAddress, amountOut);
+    TransferHelper.safeTransfer(BTRST, TreasuryAddress, amountOut);
   }
 }

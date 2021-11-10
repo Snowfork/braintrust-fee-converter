@@ -6,6 +6,7 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "@eth-optimism/hardhat-ovm";
+import "@nomiclabs/hardhat-etherscan";
 
 dotenv.config();
 
@@ -51,17 +52,26 @@ const config: HardhatUserConfig = {
           },
         },
       },
+      {
+        version: "0.7.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     ],
   },
   ovm: {
     solcVersion: "0.7.6",
   },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
+  },
   // gasReporter: {
   //   enabled: process.env.REPORT_GAS !== undefined,
   //   currency: "USD",
-  // },
-  // etherscan: {
-  //   apiKey: process.env.ETHERSCAN_API_KEY,
   // },
 };
 
