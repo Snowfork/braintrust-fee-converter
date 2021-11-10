@@ -8,9 +8,6 @@ import { swap } from "../../utils/converter";
 import logo from "../../assets/braintrust.svg";
 import usdc from "../../assets/usdc.svg";
 
-import logo from "../../assets/braintrust.svg";
-import usdc from "../../assets/usdc.svg";
-
 import "./FeeConverter.scss";
 
 const FeeConverter = () => {
