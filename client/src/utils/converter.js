@@ -16,9 +16,7 @@ export const swap = async (provider, amount) => {
   await approveUSDC(provider, amount);
   // await receiptLog(web3);
 
-  await contract.methods
-    .swapExactInputSingle(`${amount}`)
-    .send({ from: accounts[0] });
+  await contract.methods.swapExactInputSingle(`${amount * Math.pow(10, 6)}`).send({ from: accounts[0] });
 };
 
 // const receiptLog = async (web3) => {

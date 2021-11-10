@@ -29,7 +29,7 @@ contract BrainTrustFeeConverterContract {
       tokenIn: USDC,
       tokenOut: BTRST,
       fee: poolFee,
-      recipient: msg.sender,
+      recipient: TreasuryAddress,
       deadline: block.timestamp,
       amountIn: amountIn,
       amountOutMinimum: 0,
@@ -38,6 +38,6 @@ contract BrainTrustFeeConverterContract {
 
     // The call to `exactInputSingle` executes the swap.
     amountOut = swapRouter.exactInputSingle(params);
-    TransferHelper.safeTransfer(BTRST, TreasuryAddress, amountOut);
+    // TransferHelper.safeTransfer(BTRST, TreasuryAddress, amountOut);
   }
 }

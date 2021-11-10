@@ -4,8 +4,9 @@ import detectEthereumProvider from "@metamask/detect-provider";
 import Web3 from "web3";
 
 import { getUSDCBalance } from "../../utils/usdc";
-import logo from "../../assets/braintrust.svg";
 import { swap } from "../../utils/converter";
+import logo from "../../assets/braintrust.svg";
+import usdc from "../../assets/usdc.svg";
 
 const FeeConverter = () => {
   const [account, setAccount] = useState();
@@ -60,9 +61,7 @@ const FeeConverter = () => {
         const provider = await detectEthereumProvider({ mustBeMetaMask: true });
 
         if (!provider) {
-          console.error(
-            "MetaMask is not installed, please install and try again."
-          );
+          console.error("MetaMask is not installed, please install and try again.");
         }
       }
     };
@@ -87,14 +86,23 @@ const FeeConverter = () => {
         </h2>
         {account ? (
           <>
-            <Col span={24}>
+            <Col
+              span={24}
+              style={{ borderLeft: "3px solid rgb(131 159 255)", backgroundColor: "#e9e8ff", padding: "1em" }}
+            >
               <p>Account: {account}</p>
-              {isRinkeby && <p>USDC Balance: {balance}</p>}
+              {isRinkeby && (
+                <p>
+                  <img src={usdc} height={20} /> USDC Balance: {balance}
+                </p>
+              )}
             </Col>
             <Col span={24}>
               {isRinkeby ? (
                 <>
                   <Input
+                    style={{ marginTop: "1em" }}
+                    max={balance}
                     placeholder="Enter amount"
                     allowClear
                     value={convertValue}
@@ -102,21 +110,19 @@ const FeeConverter = () => {
                   />
                   <div style={{ marginTop: "1em" }}>
                     <Button
+                      disabled={convertValue === balance}
                       style={{ marginRight: "1em" }}
                       onClick={() => setConvertValue(balance)}
                     >
                       Max
                     </Button>
-                    <Button
-                      disabled={convertValue <= 0}
-                      onClick={() => onTokenSwap()}
-                    >
+                    <Button disabled={convertValue <= 0} onClick={() => onTokenSwap()}>
                       Convert
                     </Button>
                   </div>
                 </>
               ) : (
-                <p>Please connect to the Rinkeby testnet</p>
+                <p>Please connect to the Rinkeby testnet.</p>
               )}
             </Col>
           </>
