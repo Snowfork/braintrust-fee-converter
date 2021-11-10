@@ -13,7 +13,7 @@ contract BrainTrustFeeConverterContract {
 
   ISwapRouter public immutable swapRouter;
 
-  uint24 public constant poolFee = 3000;
+  uint24 public constant poolFee = 3000; // 0.3% slippage
 
   constructor(ISwapRouter _swapRouter) {
     swapRouter = _swapRouter;
@@ -29,7 +29,7 @@ contract BrainTrustFeeConverterContract {
       tokenIn: USDC,
       tokenOut: BTRST,
       fee: poolFee,
-      recipient: msg.sender,
+      recipient: TreasuryAddress,
       deadline: block.timestamp,
       amountIn: amountIn,
       amountOutMinimum: 0,
@@ -38,6 +38,5 @@ contract BrainTrustFeeConverterContract {
 
     // The call to `exactInputSingle` executes the swap.
     amountOut = swapRouter.exactInputSingle(params);
-    TransferHelper.safeTransfer(BTRST, TreasuryAddress, amountOut);
   }
 }

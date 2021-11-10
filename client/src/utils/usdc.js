@@ -20,14 +20,12 @@ export const approveUSDC = async (provider, value) => {
     method: "eth_requestAccounts",
   });
 
-  const balance = await getBalance(contract, accounts[0]);
+  const balance = (await getBalance(contract, accounts[0])) * Math.pow(10, 6);
   console.log(`Max value approved: ${balance} USDC`);
 
   if (!balance || balance < value) {
-    // const uint256 = web3.utils.numberToHex(2 ^ (256 - 1));
-    await contract.methods
-      .approve(CONTRACT_ADDRESS, 100)
-      .send({ from: accounts[0] });
+    const uint256 = web3.utils.numberToHex(2 ^ (256 - 1));
+    await contract.methods.approve(CONTRACT_ADDRESS, uint256 * Math.pow(10, 6)).send({ from: accounts[0] });
   }
 };
 
