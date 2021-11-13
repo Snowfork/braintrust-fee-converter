@@ -26,7 +26,7 @@
   border-width: 2px !important;
   border-color: $color-blue !important;
 
-  &:hover,
+  &:hover:not(:disabled),
   &:focus,
   &:active {
     background-color: transparent !important;

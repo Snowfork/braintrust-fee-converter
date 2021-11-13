@@ -15,6 +15,7 @@ export const swap = async (provider, amount) => {
   });
 
   await approveUSDC(provider, amount);
+  // TODO: Replace hardcoded decimal points with token decimal
   await contract.methods.swapExactInputSingle(`${amount * Math.pow(10, 6)}`).send({ from: accounts[0] });
 };
 

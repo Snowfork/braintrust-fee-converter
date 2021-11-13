@@ -10,26 +10,25 @@ import "@nomiclabs/hardhat-etherscan";
 
 dotenv.config();
 
-task(
-  "accounts",
-  "Prints the list of accounts",
-  async (taskArgs: any, hre: any) => {
-    const accounts = await hre.ethers.getSigners();
+task("accounts", "Prints the list of accounts", async (taskArgs: any, hre: any) => {
+  const accounts = await hre.ethers.getSigners();
 
-    for (const account of accounts) {
-      console.log(account.address);
-    }
+  for (const account of accounts) {
+    console.log(account.address);
   }
-);
+});
 
 const config: HardhatUserConfig = {
   defaultNetwork: "rinkeby",
   networks: {
-    hardhat: {},
+    hardhat: {
+      forking: {
+        url: process.env.RINKEBY_URL || "",
+      },
+    },
     rinkeby: {
       url: process.env.RINKEBY_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
   },
   solidity: {
