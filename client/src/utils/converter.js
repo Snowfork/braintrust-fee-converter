@@ -21,9 +21,10 @@ export const swap = async (provider, amount) => {
 export const getBTRSTPrice = async (provider, amount) => {
   const web3 = new Web3(provider);
   const poolContract = new web3.eth.Contract(IUniswapV3PoolABI, POOL_ADDRESS, provider);
-  const accounts = await provider.request({
-    method: "eth_requestAccounts",
-  });
+  // const accounts = await provider.request({
+  //   method: "eth_requestAccounts",
+  // });
+
   const [fee] = await Promise.all([
     // poolContract.factory(),
     poolContract.methods.fee(),
@@ -31,8 +32,13 @@ export const getBTRSTPrice = async (provider, amount) => {
     // poolContract.maxLiquidityPerTick(),
   ]);
 
-  fee.call({ from: accounts[0] }, (error, res) => console.log(res));
-
+  try {
+    return await fee.call(async (error, res) => {
+      return `Estimated price: ${res} BTRST`;
+    });
+  } catch (error) {
+    return error.message;
+  }
   // const QUOTER_ADDRESS = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6";
   // const contract = new web3.eth.Contract(QUOTER_ABI, QUOTER_ADDRESS);
   // console.log(token0, token1, fee, amount, 0);

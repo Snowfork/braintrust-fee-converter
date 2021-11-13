@@ -5,7 +5,7 @@ import Web3 from "web3";
 
 import { getUSDCBalance } from "../../utils/usdc";
 import { getBTRSTPrice, swap } from "../../utils/converter";
-import logo from "../../assets/braintrust.svg";
+import logo from "../../assets/braintrust.png";
 import usdc from "../../assets/usdc.svg";
 
 import "./FeeConverter.scss";
@@ -16,14 +16,35 @@ const FeeConverter = () => {
   const [convertValue, setConvertValue] = useState(0);
   const [isRinkeby, setIsRinkeby] = useState(false);
   const [web3Api, setWeb3Api] = useState(null);
+  const [quotedPriceMessage, setQuotedPriceMessage] = useState(null);
 
   const onTokenSwap = async () => {
     swap(web3Api.provider, convertValue);
   };
 
-  const onQuotePrice = async () => {
-    await getBTRSTPrice(web3Api.provider, convertValue);
+  const onValueChange = (value) => {
+    const regex = new RegExp(/^[+]?([0-9]+(?:[\.][0-9]*)?|\.[0-9]+)$/);
+
+    const isMatch = value.match(regex);
+
+    if (isMatch && value > balance) {
+    } else if (isMatch && value === balance) {
+      setConvertValue(balance);
+    } else if (isMatch && value <= 0) {
+      setConvertValue(0);
+    } else {
+      setConvertValue(Number(value));
+    }
   };
+
+  useEffect(() => {
+    const onQuotePrice = async () => {
+      const message = await getBTRSTPrice(web3Api.provider, convertValue);
+      setQuotedPriceMessage(message);
+    };
+
+    if (web3Api && web3Api.provider) onQuotePrice();
+  }, [web3Api, convertValue]);
 
   useEffect(() => {
     // Detect whether a provider exists & MetaMask is installed
@@ -88,7 +109,7 @@ const FeeConverter = () => {
     <Row className="wrapper">
       <Col span={24}>
         <h2 className="wrapper__header">
-          <img src={logo} alt="logo" /> <span>Fee Converter</span>
+          <img src={logo} alt="logo" /> <span>Braintrust Fee Converter</span>
         </h2>
       </Col>
       {account ? (
@@ -96,9 +117,12 @@ const FeeConverter = () => {
           <Col span={24} className="wrapper__info">
             <p>Account: {account}</p>
             {isRinkeby && (
-              <p>
-                Balance: {balance} <img src={usdc} alt="usdc" />
-              </p>
+              <>
+                <p>
+                  Balance: {balance} <img src={usdc} alt="usdc" />
+                </p>
+                {convertValue && quotedPriceMessage ? <p>Estimated price: {quotedPriceMessage} BTRST</p> : null}
+              </>
             )}
           </Col>
           <Col span={24} className="wrapper__input">
@@ -109,20 +133,19 @@ const FeeConverter = () => {
                   placeholder="Enter amount to convert"
                   allowClear
                   value={convertValue}
-                  onChange={(e) => setConvertValue(e.target.value)}
+                  onChange={(e) => onValueChange(e.target.value)}
                 />
                 <div className="wrapper__buttons">
                   <Button
                     className="wrapper__button"
                     disabled={convertValue === balance}
-                    onClick={() => setConvertValue(balance)}
+                    onClick={() => onValueChange(balance)}
                   >
                     Max
                   </Button>
                   <Button className="wrapper__button" disabled={convertValue <= 0} onClick={() => onTokenSwap()}>
                     Convert
                   </Button>
-                  <Button onClick={() => onQuotePrice()}>Quote price</Button>
                 </div>
               </>
             ) : (
