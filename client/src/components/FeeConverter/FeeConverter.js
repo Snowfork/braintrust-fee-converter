@@ -22,21 +22,6 @@ const FeeConverter = () => {
     swap(web3Api.provider, convertValue);
   };
 
-  const onValueChange = (value) => {
-    const regex = new RegExp(/^[+]?([0-9]+(?:[\.][0-9]*)?|\.[0-9]+)$/);
-
-    const isMatch = value.match(regex);
-
-    if (isMatch && value > balance) {
-    } else if (isMatch && value === balance) {
-      setConvertValue(balance);
-    } else if (isMatch && value <= 0) {
-      setConvertValue(0);
-    } else {
-      setConvertValue(Number(value));
-    }
-  };
-
   useEffect(() => {
     const onQuotePrice = async () => {
       const message = await getBTRSTPrice(web3Api.provider, convertValue);
@@ -133,17 +118,21 @@ const FeeConverter = () => {
                   placeholder="Enter amount to convert"
                   allowClear
                   value={convertValue}
-                  onChange={(e) => onValueChange(e.target.value)}
+                  onChange={(e) => setConvertValue(e.target.value)}
                 />
                 <div className="wrapper__buttons">
                   <Button
                     className="wrapper__button"
                     disabled={convertValue === balance}
-                    onClick={() => onValueChange(balance)}
+                    onClick={() => setConvertValue(balance)}
                   >
                     Max
                   </Button>
-                  <Button className="wrapper__button" disabled={convertValue <= 0} onClick={() => onTokenSwap()}>
+                  <Button
+                    className="wrapper__button"
+                    disabled={convertValue <= 0 || convertValue > balance}
+                    onClick={() => onTokenSwap()}
+                  >
                     Convert
                   </Button>
                 </div>
