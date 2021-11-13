@@ -4,7 +4,7 @@ import detectEthereumProvider from "@metamask/detect-provider";
 import Web3 from "web3";
 
 import { getUSDCBalance } from "../../utils/usdc";
-import { swap } from "../../utils/converter";
+import { getBTRSTPrice, swap } from "../../utils/converter";
 import logo from "../../assets/braintrust.svg";
 import usdc from "../../assets/usdc.svg";
 
@@ -19,6 +19,10 @@ const FeeConverter = () => {
 
   const onTokenSwap = async () => {
     swap(web3Api.provider, convertValue);
+  };
+
+  const onQuotePrice = async () => {
+    await getBTRSTPrice(web3Api.provider, convertValue);
   };
 
   useEffect(() => {
@@ -102,7 +106,7 @@ const FeeConverter = () => {
               <>
                 <Input
                   max={balance}
-                  placeholder="Enter amount"
+                  placeholder="Enter amount to convert"
                   allowClear
                   value={convertValue}
                   onChange={(e) => setConvertValue(e.target.value)}
@@ -118,6 +122,7 @@ const FeeConverter = () => {
                   <Button className="wrapper__button" disabled={convertValue <= 0} onClick={() => onTokenSwap()}>
                     Convert
                   </Button>
+                  <Button onClick={() => onQuotePrice()}>Quote price</Button>
                 </div>
               </>
             ) : (
