@@ -8,6 +8,10 @@ body {
   font-family: "Red Hat Mono", monospace;
   margin: 0;
   color: $text-color !important;
+
+  * {
+    transition: 0.2s ease-in-out !important;
+  }
 }
 
 .App {

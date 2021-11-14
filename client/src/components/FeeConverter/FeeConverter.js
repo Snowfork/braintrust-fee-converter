@@ -138,24 +138,32 @@ const FeeConverter = () => {
                 <p>
                   Balance: {balance} <img src={usdc} alt="usdc" />
                 </p>
-                {convertValue && quotedPrice ? <p>Estimated price: {quotedPrice} BTRST</p> : null}
+                {convertValue && quotedPrice && <p>Estimated price: {quotedPrice} BTRST</p>}
               </>
             )}
           </Col>
           <Col span={24} className="wrapper__input">
             {isRinkeby ? (
               <>
-                <Input
-                  max={balance}
-                  placeholder="Enter amount to convert"
-                  allowClear
-                  value={convertValue}
-                  onChange={(e) => {
-                    const value = Number(e.target.value);
-                    if (!isNaN(value)) setConvertValue(e.target.value);
-                  }}
-                />
-                {convertValue > balance && <p style={{ color: "#aaa" }}>Insufficient balance for this swap</p>}
+                <Row>
+                  <Col span={24}>
+                    <Input
+                      max={balance}
+                      placeholder="Enter amount to convert"
+                      allowClear
+                      value={convertValue}
+                      onChange={(e) => {
+                        const value = Number(e.target.value);
+                        if (!isNaN(value)) setConvertValue(e.target.value);
+                      }}
+                    />
+                  </Col>
+                  {convertValue > balance && (
+                    <Col span={24}>
+                      <p style={{ color: "#aaa" }}>Insufficient balance for this swap</p>
+                    </Col>
+                  )}
+                </Row>
                 <Row className="wrapper__footer">
                   <Col span={12} className="wrapper__buttons">
                     <Button
