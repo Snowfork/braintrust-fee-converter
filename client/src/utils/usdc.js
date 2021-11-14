@@ -22,12 +22,14 @@ export const approveUSDC = async (provider, value) => {
 
   // TODO: Replace hardcoded decimal points with token decimal
   const balance = (await getBalance(contract, accounts[0])) * Math.pow(10, 6);
-  console.log(`Max value approved: ${balance} USDC`);
+  const convertedValue = value * Math.pow(10, 6);
 
-  if (!balance || balance < value) {
-    const uint256 = web3.utils.numberToHex((2 ^ 256) - 1);
+  if (!balance || balance < convertedValue) {
+    const max = new web3.utils.BN("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+      .sub(new web3.utils.BN(1))
+      .toString();
     // TODO: Replace hardcoded decimal points with token decimal
-    await contract.methods.approve(CONTRACT_ADDRESS, uint256 * Math.pow(10, 6)).send({ from: accounts[0] });
+    await contract.methods.approve(CONTRACT_ADDRESS, max).send({ from: accounts[0] });
   }
 };
 
