@@ -4,58 +4,83 @@ import detectEthereumProvider from "@metamask/detect-provider";
 import Web3 from "web3";
 
 import { getUSDCBalance } from "../../utils/usdc";
-import { getBTRSTPrice, swap } from "../../utils/converter";
+import { getBTRSTPrice, swapToBTRST } from "../../utils/converter";
+
 import logo from "../../assets/braintrust.png";
 import usdc from "../../assets/usdc.svg";
 
 import "./FeeConverter.scss";
 
 const FeeConverter = () => {
-  const [account, setAccount] = useState();
-  const [balance, setBalance] = useState(0);
-  const [convertValue, setConvertValue] = useState(0);
-  const [isRinkeby, setIsRinkeby] = useState(false);
-  const [web3Api, setWeb3Api] = useState(null);
-  const [quotedPriceMessage, setQuotedPriceMessage] = useState(null);
+  const [account, setAccount] = useState(null); // Currently connected Metamask account
+  const [balance, setBalance] = useState(0); // Balance of account in USDC
+  const [convertValue, setConvertValue] = useState(0); // Amount input by user
+  const [isRinkeby, setIsRinkeby] = useState(false); // Chain type
+  const [web3Api, setWeb3Api] = useState(null); // Web3 provider
+  const [quotedPrice, setQuotedPrice] = useState(null); // Quoted BTRST price based on convertValue
 
   const onTokenSwap = async () => {
-    swap(web3Api.provider, convertValue);
+    swapToBTRST(web3Api.provider, convertValue);
   };
 
-  useEffect(() => {
-    const onQuotePrice = async () => {
-      const message = await getBTRSTPrice(web3Api.provider, convertValue);
-      setQuotedPriceMessage(message);
-    };
+  // useEffect(() => {
+  //   const onQuotePrice = async () => {
+  //     if (isRinkeby) {
+  //       const message = await getBTRSTPrice(web3Api.provider, convertValue);
+  //       setQuotedPrice(message);
+  //     }
+  //   };
 
-    if (web3Api && web3Api.provider) onQuotePrice();
-  }, [web3Api, convertValue]);
+  //   if (web3Api && web3Api.provider) onQuotePrice();
+  // }, [web3Api, convertValue, isRinkeby]);
 
   useEffect(() => {
     // Detect whether a provider exists & MetaMask is installed
-    const loadProvider = async () => {
+    const onLoadProvider = async (requestAccounts) => {
       const provider = await detectEthereumProvider({ mustBeMetaMask: true });
 
-      if (provider) {
+      if (provider && requestAccounts) {
         setWeb3Api({
           web3: new Web3(provider),
           provider,
         });
+
+        if (!account) {
+          const accounts = await provider.request({
+            method: "eth_requestAccounts",
+          });
+
+          // Rinkeby chainId = 4
+          const chainId = await new Web3(provider).eth.net.getId();
+          setIsRinkeby(chainId === 4);
+          setAccount(accounts[0]);
+        }
       }
     };
 
-    // Event listener when account changes to reset provider
-    window.ethereum.on("accountsChanged", async () => {
-      loadProvider();
-    });
+    const onLoadEventListeners = () => {
+      // Event listener when provider is initialized
+      window.ethereum.on("connect", async () => {
+        console.log("Connected");
+        onLoadProvider(true);
+      });
 
-    // Event listener when chain changes to reset provider
-    window.ethereum.on("chainChanged", async () => {
-      loadProvider();
-    });
+      // Event listener when account changes to reset provider
+      window.ethereum.on("accountsChanged", async () => {
+        console.log("Account changed");
+        window.location.reload();
+      });
 
-    loadProvider();
-  }, []);
+      // Event listener when chain changes to reset provider
+      window.ethereum.on("chainChanged", async () => {
+        console.log("Network changed");
+        onLoadProvider(!!account);
+      });
+    };
+
+    onLoadEventListeners();
+    onLoadProvider();
+  }, [account]);
 
   useEffect(() => {
     const requestAccounts = async () => {
@@ -65,8 +90,7 @@ const FeeConverter = () => {
           method: "eth_requestAccounts",
         });
 
-        // Rinkeby chainId = 4
-        const chainId = await web3Api.web3.eth.net.getId();
+        const chainId = await web3Api.web3.eth.net.getId(); // Rinkeby chainId = 4
         setIsRinkeby(chainId === 4);
         setAccount(accounts[0]);
       } else {
@@ -84,11 +108,17 @@ const FeeConverter = () => {
   useEffect(() => {
     const onSetBalance = async () => {
       // Balance is readjusted based on currently connected account
-      setBalance(await getUSDCBalance(account, web3Api.provider));
+      if (isRinkeby) {
+        setBalance(await getUSDCBalance(account, web3Api.provider));
+      }
     };
 
-    if (account && web3Api.provider) onSetBalance();
-  }, [account, web3Api]);
+    if (account && web3Api.provider) {
+      setTimeout(() => {
+        onSetBalance();
+      });
+    }
+  }, [account, isRinkeby, web3Api]);
 
   return (
     <Row className="wrapper">
@@ -106,7 +136,7 @@ const FeeConverter = () => {
                 <p>
                   Balance: {balance} <img src={usdc} alt="usdc" />
                 </p>
-                {convertValue && quotedPriceMessage ? <p>Estimated price: {quotedPriceMessage} BTRST</p> : null}
+                {convertValue && quotedPrice ? <p>Estimated price: {quotedPrice} BTRST</p> : null}
               </>
             )}
           </Col>

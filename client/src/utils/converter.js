@@ -1,47 +1,69 @@
 import Web3 from "web3";
 import { approveUSDC } from "./usdc";
-import { CONTRACT_ABI } from "./abi";
+import { BTRST_ABI, CONTRACT_ABI, USDC_ABI } from "./abi";
 import { abi as IUniswapV3PoolABI } from "@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json";
 import { abi as QUOTER_ABI } from "@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json";
+import { getERC20Decimal } from "./shared";
 
 const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS;
 const POOL_ADDRESS = process.env.REACT_APP_UNI_POOL_ADDRESS;
+const QUOTER_ADDRESS = process.env.REACT_APP_UNI_QUOTER_ADDRESS;
+const USDC_ADDRESS = process.env.REACT_APP_USDC_ADDRESS;
+const BTRST_ADDRESS = process.env.REACT_APP_BTRST_ADDRESS;
 
-export const swap = async (provider, amount) => {
-  const web3 = new Web3(provider);
-  const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
-  const accounts = await provider.request({
-    method: "eth_requestAccounts",
-  });
+export const swapToBTRST = async (provider, amount) => {
+  try {
+    const web3 = new Web3(provider);
+    const CONVERTER_CONTRACT = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+    const USDC_CONTRACT = new web3.eth.Contract(USDC_ABI, USDC_ADDRESS);
+    const [decimals, accounts] = await Promise.all([
+      getERC20Decimal(USDC_CONTRACT),
+      provider.request({
+        method: "eth_requestAccounts",
+      }),
+    ]);
 
-  await approveUSDC(provider, amount);
-  // TODO: Replace hardcoded decimal points with token decimal
-  await contract.methods.swapExactInputSingle(`${amount * Math.pow(10, 6)}`).send({ from: accounts[0] });
+    await approveUSDC(provider, amount);
+    await CONVERTER_CONTRACT.methods
+      .swapExactInputSingle(`${amount * Math.pow(10, decimals)}`)
+      .send({ from: accounts[0] });
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 export const getBTRSTPrice = async (provider, amount) => {
-  const web3 = new Web3(provider);
-  const poolContract = new web3.eth.Contract(IUniswapV3PoolABI, POOL_ADDRESS, provider);
-  const [token0, token1, fee] = await Promise.all([
-    poolContract.methods.token0().call(),
-    poolContract.methods.token1().call(),
-    poolContract.methods.fee().call(),
-  ]);
+  try {
+    const web3 = new Web3(provider);
+    const POOL_CONTRACT = new web3.eth.Contract(IUniswapV3PoolABI, POOL_ADDRESS, provider);
+    const USDC_CONTRACT = new web3.eth.Contract(USDC_ABI, USDC_ADDRESS);
+    const BTRST_CONTRACT = new web3.eth.Contract(BTRST_ABI, BTRST_ADDRESS);
 
-  // TODO: Add QUOTER_ADDRESS into .env
-  const QUOTER_ADDRESS = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6";
-  const contract = new web3.eth.Contract(QUOTER_ABI, QUOTER_ADDRESS);
-  const result = await contract.methods.quoteExactInputSingle(token0, token1, fee, amount * Math.pow(10, 6), 0).call();
-  return result / Math.pow(10, 18);
+    const [token0, token1, fee, USDC_decimals, BTRST_decimals] = await Promise.all([
+      POOL_CONTRACT.methods.token0().call(),
+      POOL_CONTRACT.methods.token1().call(),
+      POOL_CONTRACT.methods.fee().call(),
+      getERC20Decimal(USDC_CONTRACT),
+      getERC20Decimal(BTRST_CONTRACT),
+    ]);
+
+    const QUOTER_CONTRACT = new web3.eth.Contract(QUOTER_ABI, QUOTER_ADDRESS);
+    const result = await QUOTER_CONTRACT.methods
+      .quoteExactInputSingle(token0, token1, fee, amount * Math.pow(10, USDC_decimals), 0)
+      .call();
+
+    return result / Math.pow(10, BTRST_decimals);
+  } catch (error) {
+    console.error(error);
+    return error.message;
+  }
 };
 
-export const transactionReceiptLog = async (web3) => {
-  console.log(
-    await web3.eth.getTransactionReceipt(
-      "0x8caa180ba2570f5c31d0b3dbcf7496ed7ecfbcadbbfaa10f592e142be203fd22",
-      (e, data) => {
-        console.log(e, data);
-      }
-    )
-  );
+export const transactionReceiptLog = async (web3, txHash) => {
+  try {
+    const txReceipt = await web3.eth.getTransactionReceipt(txHash);
+    console.log(txReceipt);
+  } catch (error) {
+    console.error(error);
+  }
 };
