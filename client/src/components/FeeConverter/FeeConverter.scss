@@ -107,4 +107,26 @@
       }
     }
   }
+
+  &__slippage {
+    display: flex;
+    justify-content: flex-end;
+
+    > * {
+      margin: auto 0;
+
+      &:not(:last-child) {
+        margin-right: 0.5em;
+      }
+    }
+
+    .ant-input-affix-wrapper {
+      width: 100px;
+      padding-bottom: 0 !important;
+    }
+
+    input {
+      text-align: center;
+    }
+  }
 }

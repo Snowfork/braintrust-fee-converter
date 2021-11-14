@@ -15,6 +15,7 @@ const FeeConverter = () => {
   const [account, setAccount] = useState(null); // Currently connected Metamask account
   const [balance, setBalance] = useState(0); // Balance of account in USDC
   const [convertValue, setConvertValue] = useState(0); // Amount input by user
+  const [slippageValue, setSlippageValue] = useState(0.3); // Slippage input by user
   const [isRinkeby, setIsRinkeby] = useState(false); // Chain type
   const [web3Api, setWeb3Api] = useState(null); // Web3 provider
   const [quotedPrice, setQuotedPrice] = useState(null); // Quoted BTRST price based on convertValue
@@ -23,16 +24,16 @@ const FeeConverter = () => {
     swapToBTRST(web3Api.provider, convertValue);
   };
 
-  // useEffect(() => {
-  //   const onQuotePrice = async () => {
-  //     if (isRinkeby) {
-  //       const message = await getBTRSTPrice(web3Api.provider, convertValue);
-  //       setQuotedPrice(message);
-  //     }
-  //   };
+  useEffect(() => {
+    const onQuotePrice = async () => {
+      if (isRinkeby) {
+        const message = await getBTRSTPrice(web3Api.provider, convertValue);
+        setQuotedPrice(message);
+      }
+    };
 
-  //   if (web3Api && web3Api.provider) onQuotePrice();
-  // }, [web3Api, convertValue, isRinkeby]);
+    if (web3Api && web3Api.provider) onQuotePrice();
+  }, [web3Api, convertValue, isRinkeby]);
 
   useEffect(() => {
     // Detect whether a provider exists & MetaMask is installed
@@ -68,6 +69,7 @@ const FeeConverter = () => {
       // Event listener when account changes to reset provider
       window.ethereum.on("accountsChanged", async () => {
         console.log("Account changed");
+        onLoadProvider(!!account);
         window.location.reload();
       });
 
@@ -148,24 +150,44 @@ const FeeConverter = () => {
                   placeholder="Enter amount to convert"
                   allowClear
                   value={convertValue}
-                  onChange={(e) => setConvertValue(e.target.value)}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    if (!isNaN(value)) setConvertValue(e.target.value);
+                  }}
                 />
-                <div className="wrapper__buttons">
-                  <Button
-                    className="wrapper__button"
-                    disabled={convertValue === balance}
-                    onClick={() => setConvertValue(balance)}
-                  >
-                    Max
-                  </Button>
-                  <Button
-                    className="wrapper__button"
-                    disabled={convertValue <= 0 || convertValue > balance}
-                    onClick={() => onTokenSwap()}
-                  >
-                    Convert
-                  </Button>
-                </div>
+                {convertValue > balance && <p style={{ color: "#aaa" }}>Insufficient balance for this swap</p>}
+                <Row className="wrapper__footer">
+                  <Col span={12} className="wrapper__buttons">
+                    <Button
+                      className="wrapper__button"
+                      disabled={convertValue === balance}
+                      onClick={() => setConvertValue(balance)}
+                    >
+                      Max
+                    </Button>
+                    <Button
+                      className="wrapper__button"
+                      disabled={convertValue <= 0 || convertValue > balance}
+                      onClick={() => onTokenSwap()}
+                    >
+                      Convert
+                    </Button>
+                  </Col>
+                  <Col span={12}>
+                    <div className="wrapper__slippage">
+                      <span>Slippage (%)</span>
+                      <Input
+                        allowClear
+                        defaultValue={0.3}
+                        value={slippageValue}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          if (!isNaN(value)) setSlippageValue(e.target.value);
+                        }}
+                      />
+                    </div>
+                  </Col>
+                </Row>
               </>
             ) : (
               <p>Please connect to the Rinkeby testnet.</p>
