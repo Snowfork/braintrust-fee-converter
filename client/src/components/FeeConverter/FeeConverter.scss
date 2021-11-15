@@ -93,6 +93,12 @@
   }
 
   &__buttons {
+    @media only screen and (max-width: 600px) {
+      margin-top: 1em;
+      display: flex !important;
+      justify-content: flex-end !important;
+    }
+
     button {
       background-color: transparent;
 
@@ -152,10 +158,10 @@
   &__slippage {
     display: flex;
     justify-content: flex-end;
-    margin-top: auto;
-    height: 100%;
 
     @media only screen and (max-width: 600px) {
+      margin-top: auto;
+      height: 100%;
       margin-top: 1em !important;
     }
 
@@ -170,17 +176,10 @@
     .ant-input-affix-wrapper {
       width: 100px;
       padding-bottom: 0 !important;
-      margin-bottom: 0 !important;
     }
 
     input {
       text-align: center;
-    }
-  }
-
-  &__footer {
-    @media only screen and (max-width: 600px) {
-      justify-content: flex-end !important;
     }
   }
 }

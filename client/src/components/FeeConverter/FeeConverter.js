@@ -198,7 +198,7 @@ const FeeConverter = () => {
                   )}
                 </Row>
                 <Row className="wrapper__footer">
-                  <Col span={{ xs: 24, lg: 12 }} className="wrapper__buttons">
+                  <Col xs={{ span: 24 }} lg={{ span: 12 }} className="wrapper__buttons">
                     <Button
                       className="wrapper__button"
                       disabled={convertValue === balance}
