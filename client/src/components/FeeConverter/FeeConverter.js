@@ -29,8 +29,9 @@ const FeeConverter = () => {
       const balance = await getUSDCBalance(account, web3Api.provider);
       if (balance) setBalance(balance);
       setConvertValue(null);
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   useEffect(() => {
