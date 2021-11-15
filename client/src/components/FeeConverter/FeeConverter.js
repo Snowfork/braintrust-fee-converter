@@ -13,8 +13,8 @@ import "./FeeConverter.scss";
 
 const FeeConverter = () => {
   const [account, setAccount] = useState(null); // Currently connected Metamask account
-  const [balance, setBalance] = useState(null); // Balance of account in USDC
-  const [convertValue, setConvertValue] = useState(0); // Amount input by user
+  const [balance, setBalance] = useState(0); // Balance of account in USDC
+  const [convertValue, setConvertValue] = useState(null); // Amount input by user
   const [slippageValue, setSlippageValue] = useState(0.3); // Slippage input by user
   const [isRinkeby, setIsRinkeby] = useState(false); // Chain type
   const [web3Api, setWeb3Api] = useState(null); // Web3 provider
@@ -186,7 +186,7 @@ const FeeConverter = () => {
                         value={slippageValue}
                         onChange={(e) => {
                           const value = Number(e.target.value);
-                          if (!isNaN(value)) setSlippageValue(e.target.value);
+                          if (!isNaN(value)) setSlippageValue(e.target.value || 0.3);
                         }}
                       />
                     </div>

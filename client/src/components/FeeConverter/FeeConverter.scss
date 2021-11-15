@@ -152,6 +152,8 @@
   &__slippage {
     display: flex;
     justify-content: flex-end;
+    margin-top: auto;
+    height: 100%;
 
     @media only screen and (max-width: 600px) {
       margin-top: 1em !important;
@@ -168,6 +170,7 @@
     .ant-input-affix-wrapper {
       width: 100px;
       padding-bottom: 0 !important;
+      margin-bottom: 0 !important;
     }
 
     input {
