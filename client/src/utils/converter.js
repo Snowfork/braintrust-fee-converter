@@ -24,9 +24,13 @@ export const swapToBTRST = async (provider, amount) => {
     ]);
 
     await approveUSDC(provider, amount);
-    await CONVERTER_CONTRACT.methods
+    return await CONVERTER_CONTRACT.methods
       .swapExactInputSingle(`${amount * Math.pow(10, decimals)}`)
-      .send({ from: accounts[0] });
+      .send({ from: accounts[0] })
+      .then((transaction) => {
+        console.log(transaction);
+        return transaction.status;
+      });
   } catch (error) {
     console.error(error);
   }

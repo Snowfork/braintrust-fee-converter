@@ -34,21 +34,13 @@ export const approveUSDC = async (provider, value) => {
       }),
     ]);
 
-    const balance = (await getBalance(USDC_CONTRACT, accounts[0])) * Math.pow(10, decimals);
+    const balance = await getERC20Balance(USDC_CONTRACT, accounts[0]);
     const convertedValue = value * Math.pow(10, decimals);
 
     if (!balance || balance < convertedValue) {
       const max = new web3.utils.BN(uint256_MAX).sub(new web3.utils.BN(1)).toString();
       await USDC_CONTRACT.methods.approve(CONTRACT_ADDRESS, max).send({ from: accounts[0] });
     }
-  } catch (error) {
-    console.error(error.message);
-  }
-};
-
-export const getBalance = async (contract, account) => {
-  try {
-    return await contract.methods.allowance(account, CONTRACT_ADDRESS).call();
   } catch (error) {
     console.error(error.message);
   }
