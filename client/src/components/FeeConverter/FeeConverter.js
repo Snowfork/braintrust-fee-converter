@@ -13,7 +13,7 @@ import "./FeeConverter.scss";
 
 const FeeConverter = () => {
   const [account, setAccount] = useState(null); // Currently connected Metamask account
-  const [balance, setBalance] = useState(0); // Balance of account in USDC
+  const [balance, setBalance] = useState(null); // Balance of account in USDC
   const [convertValue, setConvertValue] = useState(0); // Amount input by user
   const [slippageValue, setSlippageValue] = useState(0.3); // Slippage input by user
   const [isRinkeby, setIsRinkeby] = useState(false); // Chain type
@@ -35,11 +35,26 @@ const FeeConverter = () => {
     if (web3Api && web3Api.provider) onQuotePrice();
   }, [web3Api, convertValue, isRinkeby]);
 
+  const onInitProvider = async () => {
+    const provider = await detectEthereumProvider({ mustBeMetaMask: true });
+    if (provider && !web3Api) {
+      setWeb3Api({
+        web3: new Web3(provider),
+        provider,
+      });
+    }
+
+    if (web3Api && web3Api.provider) {
+      await web3Api.provider.request({
+        method: "eth_requestAccounts",
+      });
+    }
+  };
+
   useEffect(() => {
     // Detect whether a provider exists & MetaMask is installed
     const onLoadProvider = async (requestAccounts) => {
       const provider = await detectEthereumProvider({ mustBeMetaMask: true });
-
       if (provider && requestAccounts) {
         setWeb3Api({
           web3: new Web3(provider),
@@ -132,21 +147,25 @@ const FeeConverter = () => {
       {account ? (
         <>
           <Col span={24} className="wrapper__info">
-            <p>Account: {account}</p>
+            <div className="wrapper__info-row">
+              <p>Account: </p>
+              <p>{account}</p>
+            </div>
             {isRinkeby && (
-              <>
+              <div className="wrapper__info-row">
+                <p>Balance: </p>
                 <p>
-                  Balance: {balance} <img src={usdc} alt="usdc" />
+                  {balance} <img src={usdc} alt="usdc" />
                 </p>
-                {convertValue && quotedPrice && <p>Estimated price: {quotedPrice} BTRST</p>}
-              </>
+                {convertValue && quotedPrice ? <p>Estimated price: {quotedPrice} BTRST</p> : null}
+              </div>
             )}
           </Col>
           <Col span={24} className="wrapper__input">
             {isRinkeby ? (
               <>
                 <Row>
-                  <Col span={24}>
+                  <Col xs={{ span: 24 }} sm={{ span: 11 }}>
                     <Input
                       max={balance}
                       placeholder="Enter amount to convert"
@@ -158,6 +177,20 @@ const FeeConverter = () => {
                       }}
                     />
                   </Col>
+                  <Col xs={{ span: 24 }} sm={{ span: 11, offset: 2 }}>
+                    <div className="wrapper__slippage">
+                      <span>Slippage (%)</span>
+                      <Input
+                        allowClear
+                        defaultValue={0.3}
+                        value={slippageValue}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          if (!isNaN(value)) setSlippageValue(e.target.value);
+                        }}
+                      />
+                    </div>
+                  </Col>
                   {convertValue > balance && (
                     <Col span={24}>
                       <p style={{ color: "#aaa" }}>Insufficient balance for this swap</p>
@@ -165,7 +198,7 @@ const FeeConverter = () => {
                   )}
                 </Row>
                 <Row className="wrapper__footer">
-                  <Col span={12} className="wrapper__buttons">
+                  <Col span={{ xs: 24, lg: 12 }} className="wrapper__buttons">
                     <Button
                       className="wrapper__button"
                       disabled={convertValue === balance}
@@ -181,20 +214,6 @@ const FeeConverter = () => {
                       Convert
                     </Button>
                   </Col>
-                  <Col span={12}>
-                    <div className="wrapper__slippage">
-                      <span>Slippage (%)</span>
-                      <Input
-                        allowClear
-                        defaultValue={0.3}
-                        value={slippageValue}
-                        onChange={(e) => {
-                          const value = Number(e.target.value);
-                          if (!isNaN(value)) setSlippageValue(e.target.value);
-                        }}
-                      />
-                    </div>
-                  </Col>
                 </Row>
               </>
             ) : (
@@ -206,15 +225,7 @@ const FeeConverter = () => {
         <Col span={24} className="wrapper__unconnected">
           <Row>
             <p>Not connected.</p>
-            <Button
-              onClick={() =>
-                web3Api.provider.request({
-                  method: "eth_requestAccounts",
-                })
-              }
-            >
-              Connect to MetaMask.
-            </Button>
+            <Button onClick={() => onInitProvider()}>Connect to MetaMask.</Button>
           </Row>
         </Col>
       )}

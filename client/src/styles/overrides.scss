@@ -1,6 +1,12 @@
 @import "antd/dist/antd.css";
 @import "./variables.scss";
 
+.ant-row-wrapper {
+  @media only screen and (max-width: 600px) {
+    width: 100% !important;
+  }
+}
+
 .ant-input-affix-wrapper {
   background: transparent !important;
   border: none !important;
