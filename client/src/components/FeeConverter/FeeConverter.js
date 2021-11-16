@@ -64,17 +64,6 @@ const FeeConverter = () => {
   };
 
   useEffect(() => {
-    const onQuotePrice = async () => {
-      if (isRinkeby) {
-        const message = await getBTRSTPrice(web3Api.provider, convertValue);
-        setQuotedPrice(message);
-      }
-    };
-
-    if (web3Api && web3Api.provider && convertValue && convertValue > 0) onQuotePrice();
-  }, [web3Api, convertValue, isRinkeby]);
-
-  useEffect(() => {
     // Detect whether a provider exists & MetaMask is installed
     const onLoadProvider = async (requestAccounts) => {
       const provider = await detectEthereumProvider({ mustBeMetaMask: true });
@@ -165,9 +154,18 @@ const FeeConverter = () => {
       }
     };
 
+    const onQuotePrice = async () => {
+      if (isRinkeby) {
+        const message = await getBTRSTPrice(web3Api.provider);
+        setQuotedPrice(message);
+      }
+    };
+
     if (account && web3Api.provider) {
       onSetBalance();
     }
+
+    if (web3Api && web3Api.provider) onQuotePrice();
   }, [account, isRinkeby, web3Api]);
 
   return (
@@ -212,6 +210,9 @@ const Header = () => (
 const AccountInfo = ({ account, balance, isRinkeby, convertValue, quotedPrice }) => (
   <Col span={24} className="wrapper__info">
     <div className="wrapper__info-row">
+      {quotedPrice ? <p>Estimated price per token: {quotedPrice} BTRST</p> : null}
+    </div>
+    <div className="wrapper__info-row">
       <p>Account: </p>
       <p>{account}</p>
     </div>
@@ -221,7 +222,6 @@ const AccountInfo = ({ account, balance, isRinkeby, convertValue, quotedPrice })
         <p>
           {balance} <img src={usdc} alt="usdc" />
         </p>
-        {convertValue && quotedPrice ? <p>Estimated price: {quotedPrice} BTRST</p> : null}
       </div>
     )}
   </Col>

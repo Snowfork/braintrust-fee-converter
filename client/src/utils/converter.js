@@ -35,7 +35,7 @@ export const swapToBTRST = async (provider, amount) => {
   }
 };
 
-export const getBTRSTPrice = async (provider, amount) => {
+export const getBTRSTPrice = async (provider) => {
   try {
     const web3 = new Web3(provider);
     const POOL_CONTRACT = new web3.eth.Contract(IUniswapV3PoolABI, POOL_ADDRESS, provider);
@@ -52,7 +52,7 @@ export const getBTRSTPrice = async (provider, amount) => {
 
     const QUOTER_CONTRACT = new web3.eth.Contract(QUOTER_ABI, QUOTER_ADDRESS);
     const result = await QUOTER_CONTRACT.methods
-      .quoteExactInputSingle(token0, token1, fee, amount * Math.pow(10, USDC_decimals), 0)
+      .quoteExactInputSingle(token0, token1, fee, 1 * Math.pow(10, USDC_decimals), 0)
       .call();
 
     return result / Math.pow(10, BTRST_decimals);
