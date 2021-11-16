@@ -1,3 +1,5 @@
+const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS;
+
 export const getERC20Balance = async (contract, address) => {
   return contract.methods.balanceOf(address).call();
 };
