@@ -1,6 +1,6 @@
 import Web3 from "web3";
 import { USDC_ABI } from "./abi";
-import { getERC20Balance, getERC20Decimal } from "./shared";
+import { getERC20Balance, getERC20Allowance, getERC20Decimal } from "./shared";
 
 const USDC_ADDRESS = process.env.REACT_APP_USDC_ADDRESS;
 const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS;
@@ -34,10 +34,10 @@ export const approveUSDC = async (provider, value) => {
       }),
     ]);
 
-    const balance = await getERC20Balance(USDC_CONTRACT, accounts[0]);
+    const allowance = await getERC20Allowance(USDC_CONTRACT, accounts[0]);
     const convertedValue = value * Math.pow(10, decimals);
 
-    if (!balance || balance < convertedValue) {
+    if (!allowance || allowance < convertedValue) {
       const max = new web3.utils.BN(uint256_MAX).sub(new web3.utils.BN(1)).toString();
       return await USDC_CONTRACT.methods.approve(CONTRACT_ADDRESS, max).send({ from: accounts[0] });
     }
