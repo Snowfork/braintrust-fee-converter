@@ -1,31 +1,30 @@
-# Advanced Sample Hardhat Project
+# Fee Converter Contracts
 
-This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
+## Installation
+This project uses Hardhat. Install it based on instructions in https://hardhat.org/
 
-The project comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts. It also comes with a variety of other tools, preconfigured to work with the project code.
+## Setup and Usage
 
-Try running some of the following tasks:
+Copy the .env.example file and modify it with your own values
+
+Then,
 
 ```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
-npx hardhat test
+npm install
 npx hardhat node
-npx hardhat help
-REPORT_GAS=true npx hardhat test
-npx hardhat coverage
-npx hardhat run scripts/deploy.ts
-TS_NODE_FILES=true npx ts-node scripts/deploy.ts
-npx eslint '**/*.{js,ts}'
-npx eslint '**/*.{js,ts}' --fix
-npx prettier '**/*.{json,sol,md}' --check
-npx prettier '**/*.{json,sol,md}' --write
-npx solhint 'contracts/**/*.sol'
-npx solhint 'contracts/**/*.sol' --fix
+npx hardhat test
 ```
 
-# Etherscan verification
+All tests should pass :)
+
+## Deployment
+We use scripts/deploy.ts for deployment. Modify the addresses in it if needed, then run:
+
+```shell
+npx hardhat run scripts/deploy.js --network <network-name>
+```
+
+## Etherscan verification
 
 To try out Etherscan verification, you first need to deploy a contract to an Ethereum network that's supported by Etherscan, such as Ropsten.
 
