@@ -34,6 +34,35 @@ const FeeConverter = () => {
     setLoading(false);
   };
 
+  const onConvertValueChange = (e) => {
+    const value = Number(e.target.value);
+    if (!isNaN(value)) setConvertValue(e.target.value);
+  };
+
+  const onInitProvider = async () => {
+    const provider = await detectEthereumProvider({ mustBeMetaMask: true });
+
+    // If uninitialized, set the provider
+    if (provider && !web3Api) {
+      setWeb3Api({
+        web3: new Web3(provider),
+        provider,
+      });
+    }
+
+    // Request accounts when MetaMask is connected
+    if (web3Api && web3Api.provider) {
+      await web3Api.provider.request({
+        method: "eth_requestAccounts",
+      });
+    }
+  };
+
+  const onSlippageChange = (e) => {
+    const value = Number(e.target.value);
+    if (!isNaN(value)) setSlippageValue(e.target.value || 0.3);
+  };
+
   useEffect(() => {
     const onQuotePrice = async () => {
       if (isRinkeby) {
@@ -44,22 +73,6 @@ const FeeConverter = () => {
 
     if (web3Api && web3Api.provider && convertValue && convertValue > 0) onQuotePrice();
   }, [web3Api, convertValue, isRinkeby]);
-
-  const onInitProvider = async () => {
-    const provider = await detectEthereumProvider({ mustBeMetaMask: true });
-    if (provider && !web3Api) {
-      setWeb3Api({
-        web3: new Web3(provider),
-        provider,
-      });
-    }
-
-    if (web3Api && web3Api.provider) {
-      await web3Api.provider.request({
-        method: "eth_requestAccounts",
-      });
-    }
-  };
 
   useEffect(() => {
     // Detect whether a provider exists & MetaMask is installed
@@ -159,99 +172,130 @@ const FeeConverter = () => {
 
   return (
     <Row className="wrapper">
-      <Col span={24}>
-        <h2 className="wrapper__header">
-          <img src={logo} alt="logo" /> <span>Braintrust Fee Converter</span>
-        </h2>
-      </Col>
+      <Header />
       {account ? (
         <>
-          <Col span={24} className="wrapper__info">
-            <div className="wrapper__info-row">
-              <p>Account: </p>
-              <p>{account}</p>
-            </div>
-            {isRinkeby && (
-              <div className="wrapper__info-row">
-                <p>Balance: </p>
-                <p>
-                  {balance} <img src={usdc} alt="usdc" />
-                </p>
-                {convertValue && quotedPrice ? <p>Estimated price: {quotedPrice} BTRST</p> : null}
-              </div>
-            )}
-          </Col>
-          <Col span={24} className="wrapper__input">
-            {isRinkeby ? (
-              <>
-                <Row>
-                  <Col xs={{ span: 24 }} sm={{ span: 11 }}>
-                    <Input
-                      max={balance}
-                      placeholder="Enter amount to convert"
-                      allowClear
-                      value={convertValue}
-                      onChange={(e) => {
-                        const value = Number(e.target.value);
-                        if (!isNaN(value)) setConvertValue(e.target.value);
-                      }}
-                    />
-                  </Col>
-                  <Col xs={{ span: 24 }} sm={{ span: 11, offset: 2 }}>
-                    <div className="wrapper__slippage">
-                      <span>Slippage (%)</span>
-                      <Input
-                        allowClear
-                        defaultValue={0.3}
-                        value={slippageValue}
-                        onChange={(e) => {
-                          const value = Number(e.target.value);
-                          if (!isNaN(value)) setSlippageValue(e.target.value || 0.3);
-                        }}
-                      />
-                    </div>
-                  </Col>
-                  {convertValue > balance && (
-                    <Col span={24}>
-                      <p style={{ color: "#aaa" }}>Insufficient balance for this swap</p>
-                    </Col>
-                  )}
-                </Row>
-                <Row className="wrapper__footer">
-                  <Col xs={{ span: 24 }} lg={{ span: 12 }} className="wrapper__buttons">
-                    <Button
-                      className="wrapper__button"
-                      disabled={convertValue === balance}
-                      onClick={() => setConvertValue(balance)}
-                    >
-                      Max
-                    </Button>
-                    <Button
-                      className="wrapper__button"
-                      disabled={convertValue <= 0 || convertValue > balance}
-                      onClick={() => onTokenSwap()}
-                      loading={isLoading}
-                    >
-                      Convert
-                    </Button>
-                  </Col>
-                </Row>
-              </>
-            ) : (
-              <p>Please connect to the Rinkeby testnet.</p>
-            )}
-          </Col>
+          <AccountInfo
+            account={account}
+            balance={balance}
+            isRinkeby={isRinkeby}
+            convertValue={convertValue}
+            quotedPrice={quotedPrice}
+          />
+          <ConverterInput
+            isRinkeby={isRinkeby}
+            balance={balance}
+            convertValue={convertValue}
+            slippageValue={slippageValue}
+            isLoading={isLoading}
+            onConvertValueChange={onConvertValueChange}
+            onSlippageChange={onSlippageChange}
+            setConvertValue={setConvertValue}
+            onTokenSwap={onTokenSwap}
+          />
         </>
       ) : (
-        <Col span={24} className="wrapper__unconnected">
-          <Row>
-            <p>Not connected.</p>
-            <Button onClick={() => onInitProvider()}>Connect to MetaMask.</Button>
-          </Row>
-        </Col>
+        <Unconnected onInitProvider={onInitProvider} />
       )}
     </Row>
   );
 };
+
+const Header = () => (
+  <Col span={24}>
+    <h2 className="wrapper__header">
+      <img src={logo} alt="logo" /> <span>Braintrust Fee Converter</span>
+    </h2>
+  </Col>
+);
+
+const AccountInfo = ({ account, balance, isRinkeby, convertValue, quotedPrice }) => (
+  <Col span={24} className="wrapper__info">
+    <div className="wrapper__info-row">
+      <p>Account: </p>
+      <p>{account}</p>
+    </div>
+    {isRinkeby && (
+      <div className="wrapper__info-row">
+        <p>Balance: </p>
+        <p>
+          {balance} <img src={usdc} alt="usdc" />
+        </p>
+        {convertValue && quotedPrice ? <p>Estimated price: {quotedPrice} BTRST</p> : null}
+      </div>
+    )}
+  </Col>
+);
+
+const ConverterInput = ({
+  isRinkeby,
+  isLoading,
+  balance,
+  convertValue,
+  slippageValue,
+  onConvertValueChange,
+  onSlippageChange,
+  setConvertValue,
+  onTokenSwap,
+}) => (
+  <Col span={24} className="wrapper__input">
+    {isRinkeby ? (
+      <>
+        <Row>
+          <Col xs={{ span: 24 }} sm={{ span: 11 }}>
+            <Input
+              max={balance}
+              placeholder="Enter amount to convert"
+              allowClear
+              value={convertValue}
+              onChange={(e) => onConvertValueChange(e)}
+            />
+          </Col>
+          <Col xs={{ span: 24 }} sm={{ span: 11, offset: 2 }}>
+            <div className="wrapper__slippage">
+              <span>Slippage (%)</span>
+              <Input allowClear defaultValue={0.3} value={slippageValue} onChange={(e) => onSlippageChange(e)} />
+            </div>
+          </Col>
+          {convertValue > balance && (
+            <Col span={24}>
+              <p className="wrapper__warning">Insufficient balance for this swap</p>
+            </Col>
+          )}
+        </Row>
+        <Row className="wrapper__footer">
+          <Col xs={{ span: 24 }} lg={{ span: 12 }} className="wrapper__buttons">
+            <Button
+              className="wrapper__button"
+              disabled={convertValue === balance}
+              onClick={() => setConvertValue(balance)}
+            >
+              Max
+            </Button>
+            <Button
+              className="wrapper__button"
+              disabled={convertValue <= 0 || convertValue > balance}
+              onClick={() => onTokenSwap()}
+              loading={isLoading}
+            >
+              Convert
+            </Button>
+          </Col>
+        </Row>
+      </>
+    ) : (
+      <p>Please connect to the Rinkeby testnet.</p>
+    )}
+  </Col>
+);
+
+const Unconnected = ({ onInitProvider }) => (
+  <Col span={24} className="wrapper__unconnected">
+    <Row>
+      <p>Not connected.</p>
+      <Button onClick={() => onInitProvider()}>Connect to MetaMask.</Button>
+    </Row>
+  </Col>
+);
 
 export default FeeConverter;
