@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { BaseProvider } from "@ethersproject/providers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { use, expect } from "chai";
@@ -5,16 +6,28 @@ import { solidity } from "ethereum-waffle";
 import { Contract } from "ethers";
 import { ethers, artifacts } from "hardhat";
 import Web3 from "web3";
+=======
+import Web3 from "web3";
+import { use, expect } from "chai";
+import { solidity } from "ethereum-waffle";
+>>>>>>> 1d6c6da6ea1d88f3ccb5eef1c1253b1b528cd448
 
 use(solidity);
 
 describe("Brain Trust Fee Converter", function () {
   it("Should successfully swap and send", async function () {
+<<<<<<< HEAD
 
     const web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"));
     const max = web3.utils.toBN("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
     .sub(web3.utils.toBN(1))
     // .toString();
+=======
+    const web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"));
+    const max = web3.utils
+      .toBN("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+      .sub(web3.utils.toBN(1));
+>>>>>>> 1d6c6da6ea1d88f3ccb5eef1c1253b1b528cd448
 
     // Addresses
     const CONTRACT_ADDRESS = "0x3E0a0ed88934Ee36113e8187d3635C24dA01e1E4";
@@ -31,6 +44,7 @@ describe("Brain Trust Fee Converter", function () {
     // Retrieve user accounts
     const owners = await web3.eth.getAccounts();
 
+<<<<<<< HEAD
     // send funds to allowance / approve
     await USDC_CONTRACT.methods.approve(CONTRACT_ADDRESS, max).send({ from: owners[0] });
     const userBalance = await USDC_CONTRACT.methods.balanceOf(owners[0]).call();
@@ -44,3 +58,16 @@ describe("Brain Trust Fee Converter", function () {
     expect(amountOut.status).to.equal(true);
   });
 });
+=======
+    // Send funds to approve
+    await USDC_CONTRACT.methods.approve(CONTRACT_ADDRESS, max).send({ from: owners[0] });
+    const allowance = await USDC_CONTRACT.methods.allowance(owners[0], CONTRACT_ADDRESS).call();
+
+    const amount = `${10 * Math.pow(10, 6)}`;
+    const amountOut = await CONVERTER_CONTRACT.methods.swapExactInputSingle(amount).send({ from: owners[0] });
+
+    expect(allowance).to.equal(max.toString());
+    expect(amountOut.status).to.equal(true);
+  });
+});
+>>>>>>> 1d6c6da6ea1d88f3ccb5eef1c1253b1b528cd448

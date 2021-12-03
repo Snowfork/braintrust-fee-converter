@@ -1,0 +1,17 @@
+@import "./styles/overrides.scss";
+@import "./styles/variables.scss";
+
+body {
+  background: $bg-color-1;
+  background: -webkit-linear-gradient(to right, $bg-color-1, #636fa4);
+  background: linear-gradient(to right, $bg-color-1, $bg-color-2);
+  font-family: "Red Hat Mono", monospace;
+  margin: 0;
+  color: $text-color !important;
+}
+
+.App {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
