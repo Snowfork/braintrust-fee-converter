@@ -22,12 +22,19 @@ const config: HardhatUserConfig = {
   defaultNetwork: "rinkeby",
   networks: {
     hardhat: {
+      chainId: 31337,
       forking: {
         url: process.env.RINKEBY_URL || "",
       },
     },
     rinkeby: {
+      chainId: 4,
       url: process.env.RINKEBY_URL || "",
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
+    mainnet: {
+      chainId: 1,
+      url: process.env.MAINNET_URL || "",
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
   },

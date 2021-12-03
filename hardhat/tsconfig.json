@@ -5,6 +5,7 @@
     "strict": true,
     "esModuleInterop": true,
     "outDir": "dist",
+    "allowJs": true,
     "declaration": true
   },
   "include": ["./scripts", "./test", "./typechain"],

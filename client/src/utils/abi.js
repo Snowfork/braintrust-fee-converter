@@ -743,23 +743,28 @@ export const CONTRACT_ABI = [
     type: "function",
   },
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: "uint256",
-        name: "amountIn",
-        type: "uint256",
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
       },
-    ],
-    name: "swapExactInputSingle",
-    outputs: [
       {
-        internalType: "uint256",
-        name: "amountOut",
-        type: "uint256",
-      },
+        "internalType": "uint256",
+        "name": "amountOutMin",
+        "type": "uint256"
+      }
     ],
-    stateMutability: "nonpayable",
-    type: "function",
+    "name": "swapExactInputSingle",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     inputs: [],

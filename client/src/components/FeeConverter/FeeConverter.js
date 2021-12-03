@@ -15,7 +15,7 @@ const FeeConverter = () => {
   const [account, setAccount] = useState(null); // Currently connected Metamask account
   const [balance, setBalance] = useState(0); // Balance of account in USDC
   const [convertValue, setConvertValue] = useState(null); // Amount input by user
-  const [slippageValue, setSlippageValue] = useState(0.3); // Slippage input by user
+  const [slippageValue, setSlippageValue] = useState(1); // Slippage input by user
   const [isRinkeby, setIsRinkeby] = useState(false); // Chain type
   const [web3Api, setWeb3Api] = useState(null); // Web3 provider
   const [quotedPrice, setQuotedPrice] = useState(null); // Quoted BTRST price based on convertValue
@@ -23,7 +23,7 @@ const FeeConverter = () => {
 
   const onTokenSwap = async () => {
     setLoading(true);
-    const swap = await swapToBTRST(web3Api.provider, convertValue);
+    const swap = await swapToBTRST(web3Api.provider, convertValue, slippageValue, quotedPrice);
 
     if (swap) {
       const balance = await getUSDCBalance(account, web3Api.provider);
@@ -60,7 +60,7 @@ const FeeConverter = () => {
 
   const onSlippageChange = (e) => {
     const value = Number(e.target.value);
-    if (!isNaN(value)) setSlippageValue(e.target.value || 0.3);
+    if (!isNaN(value)) setSlippageValue(e.target.value || 1);
   };
 
   useEffect(() => {
@@ -254,7 +254,7 @@ const ConverterInput = ({
           <Col xs={{ span: 24 }} sm={{ span: 11, offset: 2 }}>
             <div className="wrapper__slippage">
               <span>Slippage (%)</span>
-              <Input allowClear defaultValue={0.3} value={slippageValue} onChange={(e) => onSlippageChange(e)} />
+              <Input allowClear defaultValue={1} value={slippageValue} onChange={(e) => onSlippageChange(e)} />
             </div>
           </Col>
           {convertValue > balance && (
