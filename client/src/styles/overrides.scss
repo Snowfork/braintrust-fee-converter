@@ -1,0 +1,43 @@
+@import "antd/dist/antd.css";
+@import "./variables.scss";
+
+.ant-row-wrapper {
+  @media only screen and (max-width: 600px) {
+    width: 100% !important;
+  }
+}
+
+.ant-input-affix-wrapper {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 3px solid rgb(103, 138, 255) !important;
+  padding-left: 0.5em !important;
+}
+
+.ant-input-wrapper,
+.ant-input-affix-wrapper input {
+  color: $text-color !important;
+}
+
+.ant-input-affix-wrapper.ant-input-affix-wrapper-focused,
+.ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover {
+  box-shadow: none !important;
+}
+
+.ant-input {
+  background: transparent !important;
+}
+
+.ant-btn {
+  color: $text-color !important;
+  border-width: 2px !important;
+  border-color: $color-blue !important;
+
+  &:hover:not(:disabled),
+  &:focus,
+  &:active {
+    background-color: transparent !important;
+    color: $color-blue !important;
+    border-bottom: 2px solid $color-blue !important;
+  }
+}
