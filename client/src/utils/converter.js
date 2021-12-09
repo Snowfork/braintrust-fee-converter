@@ -24,8 +24,8 @@ export const swapToBTRST = async (provider, amount, slippage, quotePrice) => {
     ]);
 
     await approveUSDC(provider, amount);
-
-    const poolFee = 0.997; // should not use as a fix value
+    const contractPoolFee = await CONVERTER_CONTRACT.methods.poolFee().call();
+    const poolFee = 1 - (contractPoolFee / 1000000);
     const btrstDecimal = new web3.utils.BN(10).mul(new web3.utils.BN(decimals));
     const amountReal = new web3.utils.BN(amount).mul(btrstDecimal);
     const slipInPerc = (100 - slippage) / 100;

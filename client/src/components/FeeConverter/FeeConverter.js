@@ -15,7 +15,7 @@ const FeeConverter = () => {
   const [account, setAccount] = useState(null); // Currently connected Metamask account
   const [balance, setBalance] = useState(0); // Balance of account in USDC
   const [convertValue, setConvertValue] = useState(null); // Amount input by user
-  const [slippageValue, setSlippageValue] = useState(1); // Slippage input by user
+  const [slippageValue, setSlippageValue] = useState(process.env.DEFAULT_SLIPPAGE); // Slippage input by user
   const [isRinkeby, setIsRinkeby] = useState(false); // Chain type
   const [web3Api, setWeb3Api] = useState(null); // Web3 provider
   const [quotedPrice, setQuotedPrice] = useState(null); // Quoted BTRST price based on convertValue
