@@ -753,7 +753,12 @@ export const CONTRACT_ABI = [
         "internalType": "uint256",
         "name": "amountOutMin",
         "type": "uint256"
-      }
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      },
     ],
     "name": "swapExactInputSingle",
     "outputs": [

@@ -12,10 +12,14 @@ import usdc from "../../assets/usdc.svg";
 import "./FeeConverter.scss";
 
 const FeeConverter = () => {
+  const defaultSlippage = Number(process.env.REACT_APP_DEFAULT_SLIPPAGE);
+  const defaultDeadline = Number(process.env.REACT_APP_DEFAULT_DEADLINE);
+
   const [account, setAccount] = useState(null); // Currently connected Metamask account
   const [balance, setBalance] = useState(0); // Balance of account in USDC
   const [convertValue, setConvertValue] = useState(null); // Amount input by user
-  const [slippageValue, setSlippageValue] = useState(process.env.DEFAULT_SLIPPAGE); // Slippage input by user
+  const [slippageValue, setSlippageValue] = useState(defaultSlippage); // Slippage input by user
+  const [deadline, setDeadline] = useState(defaultDeadline); // Slippage input by user
   const [isRinkeby, setIsRinkeby] = useState(false); // Chain type
   const [web3Api, setWeb3Api] = useState(null); // Web3 provider
   const [quotedPrice, setQuotedPrice] = useState(null); // Quoted BTRST price based on convertValue
@@ -23,7 +27,7 @@ const FeeConverter = () => {
 
   const onTokenSwap = async () => {
     setLoading(true);
-    const swap = await swapToBTRST(web3Api.provider, convertValue, slippageValue, quotedPrice);
+    const swap = await swapToBTRST(web3Api.provider, convertValue, slippageValue, quotedPrice, deadline);
 
     if (swap) {
       const balance = await getUSDCBalance(account, web3Api.provider);
@@ -61,6 +65,11 @@ const FeeConverter = () => {
   const onSlippageChange = (e) => {
     const value = Number(e.target.value);
     if (!isNaN(value)) setSlippageValue(e.target.value || 1);
+  };
+
+  const onDeadlineChange = (e) => {
+    const value = Number(e.target.value);
+    if (!isNaN(value)) setDeadline(e.target.value || 1200);
   };
 
   useEffect(() => {
@@ -190,6 +199,8 @@ const FeeConverter = () => {
             onSlippageChange={onSlippageChange}
             setConvertValue={setConvertValue}
             onTokenSwap={onTokenSwap}
+            onDeadlineChange={onDeadlineChange}
+            deadline={deadline}
           />
         </>
       ) : (
@@ -237,6 +248,8 @@ const ConverterInput = ({
   onSlippageChange,
   setConvertValue,
   onTokenSwap,
+  onDeadlineChange,
+  deadline
 }) => (
   <Col span={24} className="wrapper__input">
     {isRinkeby ? (
@@ -280,6 +293,12 @@ const ConverterInput = ({
             >
               Convert
             </Button>
+          </Col>
+          <Col xs={{ span: 24 }} sm={{ span: 10, offset: 2 }}>
+            <div className="wrapper__slippage">
+              <span>Deadline (s)</span>
+              <Input allowClear defaultValue={1200} value={deadline} onChange={(e) => onDeadlineChange(e)} />
+            </div>
           </Col>
         </Row>
       </>

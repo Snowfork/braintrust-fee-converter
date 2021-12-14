@@ -11,7 +11,7 @@ const QUOTER_ADDRESS = process.env.REACT_APP_UNI_QUOTER_ADDRESS;
 const USDC_ADDRESS = process.env.REACT_APP_USDC_ADDRESS;
 const BTRST_ADDRESS = process.env.REACT_APP_BTRST_ADDRESS;
 
-export const swapToBTRST = async (provider, amount, slippage, quotePrice) => {
+export const swapToBTRST = async (provider, amount, slippage, quotePrice, deadline) => {
   try {
     const web3 = new Web3(provider);
     const CONVERTER_CONTRACT = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
@@ -26,13 +26,13 @@ export const swapToBTRST = async (provider, amount, slippage, quotePrice) => {
     await approveUSDC(provider, amount);
     const contractPoolFee = await CONVERTER_CONTRACT.methods.poolFee().call();
     const poolFee = 1 - (contractPoolFee / 1000000);
-    const btrstDecimal = new web3.utils.BN(10).mul(new web3.utils.BN(decimals));
+    const btrstDecimal = new web3.utils.BN(10).pow(new web3.utils.BN(decimals));
     const amountReal = new web3.utils.BN(amount).mul(btrstDecimal);
     const slipInPerc = (100 - slippage) / 100;
     const amountOutMin = new web3.utils.BN(amountReal * quotePrice * slipInPerc * poolFee);
 
     return await CONVERTER_CONTRACT.methods
-      .swapExactInputSingle(amountReal, amountOutMin)
+      .swapExactInputSingle(amountReal, amountOutMin, deadline)
       .send({ from: accounts[0] })
       .then((transaction) => transaction.status);
   } catch (error) {

@@ -1,4 +1,4 @@
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity >=0.8.4;
 import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
 import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
 
@@ -19,18 +19,16 @@ contract BrainTrustFeeConverterContract {
     poolFee = _poolFee;
   }
 
-  function swapExactInputSingle(uint256 amountIn, uint256 amountOutMin) external returns (uint256 amountOut) {
+  function swapExactInputSingle(uint256 amountIn, uint256 amountOutMin, uint256 deadline) external returns (uint256 amountOut) {
     TransferHelper.safeTransferFrom(USDC, msg.sender, address(this), amountIn);
     TransferHelper.safeApprove(USDC, address(swapRouter), amountIn);
 
-    // Naively set amountOutMinimum to 0. In production, use an oracle or other data source to choose a safer value for amountOutMinimum.
-    // We also set the sqrtPriceLimitx96 to be 0 to ensure we swap our exact input amount.
     ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
       tokenIn: USDC,
       tokenOut: BTRST,
       fee: poolFee,
       recipient: TreasuryAddress,
-      deadline: block.timestamp,
+      deadline: block.timestamp + deadline,
       amountIn: amountIn,
       amountOutMinimum: amountOutMin,
       sqrtPriceLimitX96: 0
