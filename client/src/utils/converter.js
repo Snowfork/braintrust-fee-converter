@@ -30,9 +30,10 @@ export const swapToBTRST = async (provider, amount, slippage, quotePrice, deadli
     const amountReal = new web3.utils.BN(amount).mul(btrstDecimal);
     const slipInPerc = (100 - slippage) / 100;
     const amountOutMin = new web3.utils.BN(amountReal * quotePrice * slipInPerc * poolFee);
+    const txnDeadline = Math.floor(Date.now() / 1000) + deadline
 
     return await CONVERTER_CONTRACT.methods
-      .swapExactInputSingle(amountReal, amountOutMin, deadline)
+      .swapExactInputSingle(amountReal, amountOutMin, txnDeadline)
       .send({ from: accounts[0] })
       .then((transaction) => transaction.status);
   } catch (error) {

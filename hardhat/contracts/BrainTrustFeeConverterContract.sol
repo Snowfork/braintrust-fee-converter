@@ -28,7 +28,7 @@ contract BrainTrustFeeConverterContract {
       tokenOut: BTRST,
       fee: poolFee,
       recipient: TreasuryAddress,
-      deadline: block.timestamp + deadline,
+      deadline: deadline,
       amountIn: amountIn,
       amountOutMinimum: amountOutMin,
       sqrtPriceLimitX96: 0
