@@ -31,7 +31,7 @@ export interface BrainTrustFeeConverterContractInterface
     "TreasuryAddress()": FunctionFragment;
     "USDC()": FunctionFragment;
     "poolFee()": FunctionFragment;
-    "swapExactInputSingle(uint256,uint256)": FunctionFragment;
+    "swapExactInputSingle(uint256,uint256,uint256)": FunctionFragment;
     "swapRouter()": FunctionFragment;
   };
 
@@ -44,7 +44,7 @@ export interface BrainTrustFeeConverterContractInterface
   encodeFunctionData(functionFragment: "poolFee", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "swapExactInputSingle",
-    values: [BigNumberish, BigNumberish]
+    values: [BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "swapRouter",
@@ -105,6 +105,7 @@ export interface BrainTrustFeeConverterContract extends BaseContract {
     swapExactInputSingle(
       amountIn: BigNumberish,
       amountOutMin: BigNumberish,
+      deadline: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -122,6 +123,7 @@ export interface BrainTrustFeeConverterContract extends BaseContract {
   swapExactInputSingle(
     amountIn: BigNumberish,
     amountOutMin: BigNumberish,
+    deadline: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -139,6 +141,7 @@ export interface BrainTrustFeeConverterContract extends BaseContract {
     swapExactInputSingle(
       amountIn: BigNumberish,
       amountOutMin: BigNumberish,
+      deadline: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -159,6 +162,7 @@ export interface BrainTrustFeeConverterContract extends BaseContract {
     swapExactInputSingle(
       amountIn: BigNumberish,
       amountOutMin: BigNumberish,
+      deadline: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -177,6 +181,7 @@ export interface BrainTrustFeeConverterContract extends BaseContract {
     swapExactInputSingle(
       amountIn: BigNumberish,
       amountOutMin: BigNumberish,
+      deadline: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
