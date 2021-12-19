@@ -33,7 +33,7 @@ In this project, copy the .env.example file to a file named .env, and then edit 
 Then, copy the deployment address as well as the deployment constructor parameters and run:
 
 ```shell
-npx hardhat verify --network ropsten DEPLOYED_CONTRACT_ADDRESS PARAMATER_1 PARAMATER_2 PARAMATER_3 PARAMATER_4 PARAMATER_5
+npx hardhat verify --network ropsten DEPLOYED_CONTRACT_ADDRESS PARAMETER_1 PARAMETER_2 PARAMETER_3 PARAMETER_4 PARAMETER_5
 ```
 
 # Performance optimizations
