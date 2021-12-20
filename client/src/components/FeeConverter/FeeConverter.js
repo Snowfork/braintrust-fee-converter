@@ -306,7 +306,7 @@ const ConverterInput = ({
     ) : (
       <div>
         {!expectedChainId && <p>Did you forget to set your .env config?</p>}
-        {expectedChainId ? <p>Please connect to the {expectedChainId === 1 && 'Mainnet'} {expectedChainId === 1 && 'Rinkeby'} network.</p> : <></>}
+        {expectedChainId ? <p>Please connect to the {expectedChainId === 1 && 'Mainnet'} {expectedChainId === 4 && 'Rinkeby'} network.</p> : <></>}
       </div>
     )}
   </Col>
