@@ -11,6 +11,8 @@ import usdc from "../../assets/usdc.svg";
 
 import "./FeeConverter.scss";
 
+const expectedChainId = Number(process.env.REACT_APP_EXPECTED_CHAIN_ID);
+
 const FeeConverter = () => {
   const defaultSlippage = Number(process.env.REACT_APP_DEFAULT_SLIPPAGE);
   const defaultDeadline = Number(process.env.REACT_APP_DEFAULT_DEADLINE);
@@ -20,7 +22,7 @@ const FeeConverter = () => {
   const [convertValue, setConvertValue] = useState(null); // Amount input by user
   const [slippageValue, setSlippageValue] = useState(defaultSlippage); // Slippage input by user
   const [deadline, setDeadline] = useState(defaultDeadline); // Slippage input by user
-  const [isRinkeby, setIsRinkeby] = useState(false); // Chain type
+  const [isExpectedChainId, setIsExpectedChainId] = useState(false); // Chain type
   const [web3Api, setWeb3Api] = useState(null); // Web3 provider
   const [quotedPrice, setQuotedPrice] = useState(null); // Quoted BTRST price based on convertValue
   const [isLoading, setLoading] = useState(false); // Loading state on button when swapping
@@ -87,9 +89,8 @@ const FeeConverter = () => {
             method: "eth_requestAccounts",
           });
 
-          // Rinkeby chainId = 4
           const chainId = await new Web3(provider).eth.net.getId();
-          setIsRinkeby(chainId === 4);
+          setIsExpectedChainId(chainId === expectedChainId);
           setAccount(accounts[0]);
         }
       }
@@ -144,8 +145,8 @@ const FeeConverter = () => {
           method: "eth_requestAccounts",
         });
 
-        const chainId = await web3Api.web3.eth.net.getId(); // Rinkeby chainId = 4
-        setIsRinkeby(chainId === 4);
+        const chainId = await web3Api.web3.eth.net.getId();
+        setIsExpectedChainId(chainId === expectedChainId);
         setAccount(accounts[0]);
       }
     };
@@ -157,14 +158,14 @@ const FeeConverter = () => {
   useEffect(() => {
     const onSetBalance = async () => {
       // Balance is readjusted based on currently connected account
-      if (isRinkeby) {
+      if (isExpectedChainId) {
         const balance = await getUSDCBalance(account, web3Api.provider);
         if (balance) setBalance(balance);
       }
     };
 
     const onQuotePrice = async () => {
-      if (isRinkeby) {
+      if (isExpectedChainId) {
         const message = await getBTRSTPrice(web3Api.provider);
         setQuotedPrice(message);
       }
@@ -175,7 +176,7 @@ const FeeConverter = () => {
     }
 
     if (web3Api && web3Api.provider) onQuotePrice();
-  }, [account, isRinkeby, web3Api]);
+  }, [account, isExpectedChainId, web3Api]);
 
   return (
     <Row className="wrapper">
@@ -185,12 +186,12 @@ const FeeConverter = () => {
           <AccountInfo
             account={account}
             balance={balance}
-            isRinkeby={isRinkeby}
+            isExpectedChainId={isExpectedChainId}
             convertValue={convertValue}
             quotedPrice={quotedPrice}
           />
           <ConverterInput
-            isRinkeby={isRinkeby}
+            isExpectedChainId={isExpectedChainId}
             balance={balance}
             convertValue={convertValue}
             slippageValue={slippageValue}
@@ -218,7 +219,7 @@ const Header = () => (
   </Col>
 );
 
-const AccountInfo = ({ account, balance, isRinkeby, convertValue, quotedPrice }) => (
+const AccountInfo = ({ account, balance, isExpectedChainId, convertValue, quotedPrice }) => (
   <Col span={24} className="wrapper__info">
     <div className="wrapper__info-row">
       {quotedPrice ? <p>Estimated price per token: {quotedPrice} BTRST</p> : null}
@@ -227,7 +228,7 @@ const AccountInfo = ({ account, balance, isRinkeby, convertValue, quotedPrice })
       <p>Account: </p>
       <p>{account}</p>
     </div>
-    {isRinkeby && (
+    {isExpectedChainId && (
       <div className="wrapper__info-row">
         <p>Balance: </p>
         <p>
@@ -239,7 +240,7 @@ const AccountInfo = ({ account, balance, isRinkeby, convertValue, quotedPrice })
 );
 
 const ConverterInput = ({
-  isRinkeby,
+  isExpectedChainId,
   isLoading,
   balance,
   convertValue,
@@ -252,7 +253,7 @@ const ConverterInput = ({
   deadline
 }) => (
   <Col span={24} className="wrapper__input">
-    {isRinkeby ? (
+    {isExpectedChainId ? (
       <>
         <Row>
           <Col xs={{ span: 24 }} sm={{ span: 11 }}>
@@ -303,7 +304,10 @@ const ConverterInput = ({
         </Row>
       </>
     ) : (
-      <p>Please connect to the Rinkeby testnet.</p>
+      <div>
+        {!expectedChainId && <p>Did you forget to set your .env config?</p>}
+        {expectedChainId ? <p>Please connect to the {expectedChainId === 1 && 'Mainnet'} {expectedChainId === 4 && 'Rinkeby'} network.</p> : <></>}
+      </div>
     )}
   </Col>
 );

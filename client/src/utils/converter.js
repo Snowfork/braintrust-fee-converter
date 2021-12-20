@@ -65,7 +65,7 @@ export const getBTRSTPrice = async (provider) => {
     return result / Math.pow(10, BTRST_decimals);
   } catch (error) {
     console.error(error);
-    return error.message;
+    return "There is not enough liquidity to trade";
   }
 };
 
