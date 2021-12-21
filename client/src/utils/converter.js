@@ -51,11 +51,12 @@ export const getBTRSTPrice = async (provider) => {
     ]);
 
     const QUOTER_CONTRACT = new web3.eth.Contract(QUOTER_ABI, QUOTER_ADDRESS);
+
     const result = await QUOTER_CONTRACT.methods
-      .quoteExactInputSingle(token0, token1, fee, 1 * Math.pow(10, USDC_decimals), 0)
+      .quoteExactInputSingle(token0, token1, fee, new web3.utils.toBN(1 * Math.pow(10, BTRST_decimals)), 0)
       .call();
 
-    return result / Math.pow(10, BTRST_decimals);
+    return result / Math.pow(10, USDC_decimals);
   } catch (error) {
     console.error(error);
     return error.message;

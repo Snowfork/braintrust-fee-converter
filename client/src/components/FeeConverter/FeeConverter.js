@@ -210,7 +210,7 @@ const Header = () => (
 const AccountInfo = ({ account, balance, isRinkeby, convertValue, quotedPrice }) => (
   <Col span={24} className="wrapper__info">
     <div className="wrapper__info-row">
-      {quotedPrice ? <p>Estimated price per token: {quotedPrice} BTRST</p> : null}
+      {quotedPrice ? <p>Estimated price per token: {quotedPrice} USDC</p> : null}
     </div>
     <div className="wrapper__info-row">
       <p>Account: </p>
