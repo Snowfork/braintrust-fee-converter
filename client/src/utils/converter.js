@@ -3,7 +3,7 @@ import { approveUSDC } from "./usdc";
 import { BTRST_ABI, CONTRACT_ABI, USDC_ABI } from "./abi";
 import { abi as IUniswapV3PoolABI } from "@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json";
 import { abi as QUOTER_ABI } from "@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json";
-import { getERC20Decimal } from "./shared";
+import { getERC20Decimal, getAmountOutMin } from "./shared";
 
 const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS;
 const POOL_ADDRESS = process.env.REACT_APP_UNI_POOL_ADDRESS;
@@ -15,21 +15,12 @@ export const swapToBTRST = async (provider, amount, slippage, quotePrice, deadli
   try {
     const web3 = new Web3(provider);
     const CONVERTER_CONTRACT = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
-    const USDC_CONTRACT = new web3.eth.Contract(USDC_ABI, USDC_ADDRESS);
-    const [decimals, accounts] = await Promise.all([
-      getERC20Decimal(USDC_CONTRACT),
-      provider.request({
-        method: "eth_requestAccounts",
-      }),
-    ]);
+    const accounts = await provider.request({
+      method: "eth_requestAccounts"
+    })
 
     await approveUSDC(provider, amount);
-    const contractPoolFee = await CONVERTER_CONTRACT.methods.poolFee().call();
-    const poolFee = 1 - (contractPoolFee / 1000000);
-    const btrstDecimal = new web3.utils.BN(10).pow(new web3.utils.BN(decimals));
-    const amountReal = new web3.utils.BN(amount).mul(btrstDecimal);
-    const slipInPerc = (100 - slippage) / 100;
-    const amountOutMin = new web3.utils.BN(amountReal * quotePrice * slipInPerc * poolFee);
+    const { amountOutMin, amountReal } = await getAmountOutMin(provider, amount, slippage, quotePrice)
     const txnDeadline = Math.floor(Date.now() / 1000) + deadline
 
     return await CONVERTER_CONTRACT.methods
