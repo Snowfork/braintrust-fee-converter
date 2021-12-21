@@ -1,11 +1,24 @@
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
+import { networkConfigs } from './arguments';
 
 async function main() {
+
+  const networkConfig:any = networkConfigs;
+  
+  const chainId = network.config.chainId?.toString() || String(31337);
   const Contract = await ethers.getContractFactory(
     "BrainTrustFeeConverterContract"
   );
-  const UniV3RouterAddress = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
-  const converter = await Contract.deploy(UniV3RouterAddress);
+  
+  const selectedNetwork = networkConfig[chainId];
+  
+  const converter = await Contract.deploy(
+    selectedNetwork["UniV3RouterAddress"], 
+    selectedNetwork["TreasuryAddress"],
+    selectedNetwork["usdcAddress"],
+    selectedNetwork["btrstAddress"],
+    selectedNetwork["poolFee"],
+  );
 
   await converter.deployed();
 

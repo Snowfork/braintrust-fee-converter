@@ -5,12 +5,8 @@
     "strict": true,
     "esModuleInterop": true,
     "outDir": "dist",
-<<<<<<< HEAD
-    "declaration": true,
-    "resolveJsonModule": true
-=======
+    "allowJs": true,
     "declaration": true
->>>>>>> 1d6c6da6ea1d88f3ccb5eef1c1253b1b528cd448
   },
   "include": ["./scripts", "./test", "./typechain"],
   "files": ["./hardhat.config.ts"]
