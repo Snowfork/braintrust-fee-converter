@@ -10,6 +10,7 @@ import logo from "../../assets/braintrust.png";
 import usdc from "../../assets/usdc.svg";
 
 import "./FeeConverter.scss";
+import { getAmountOutMin } from "../../utils/shared";
 
 const expectedChainId = Number(process.env.REACT_APP_EXPECTED_CHAIN_ID);
 
@@ -19,13 +20,14 @@ const FeeConverter = () => {
 
   const [account, setAccount] = useState(null); // Currently connected Metamask account
   const [balance, setBalance] = useState(0); // Balance of account in USDC
-  const [convertValue, setConvertValue] = useState(null); // Amount input by user
+  const [convertValue, setConvertValue] = useState(0); // Amount input by user
   const [slippageValue, setSlippageValue] = useState(defaultSlippage); // Slippage input by user
   const [deadline, setDeadline] = useState(defaultDeadline); // Slippage input by user
   const [isExpectedChainId, setIsExpectedChainId] = useState(false); // Chain type
   const [web3Api, setWeb3Api] = useState(null); // Web3 provider
   const [quotedPrice, setQuotedPrice] = useState(null); // Quoted BTRST price based on convertValue
   const [isLoading, setLoading] = useState(false); // Loading state on button when swapping
+  const [minOutValue, setMinOutValue] = useState(0); // Amount input by user
 
   const onTokenSwap = async () => {
     setLoading(true);
@@ -34,16 +36,31 @@ const FeeConverter = () => {
     if (swap) {
       const balance = await getUSDCBalance(account, web3Api.provider);
       if (balance) setBalance(balance);
-      setConvertValue(null);
+      setConvertValue(0);
+      setMinOutValue(0);
     }
 
     setLoading(false);
   };
 
   const onConvertValueChange = (e) => {
-    const value = Number(e.target.value);
-    if (!isNaN(value)) setConvertValue(e.target.value);
+    if (!isNaN(e.target.value)) {
+      setConvertValue(e.target.value);
+    }
   };
+
+
+
+  useEffect(() => {
+    const onMinAmountHandler = async () => {
+      const { amountOutMin } = await getAmountOutMin(web3Api.provider, convertValue, slippageValue, quotedPrice)
+      setMinOutValue(amountOutMin)
+    }
+
+    if (web3Api && web3Api.provider) {
+      onMinAmountHandler()
+    }
+  }, [web3Api, convertValue, slippageValue, quotedPrice])
 
   const onInitProvider = async () => {
     const provider = await detectEthereumProvider({ mustBeMetaMask: true });
@@ -202,6 +219,7 @@ const FeeConverter = () => {
             onTokenSwap={onTokenSwap}
             onDeadlineChange={onDeadlineChange}
             deadline={deadline}
+            minOutValue={minOutValue}
           />
         </>
       ) : (
@@ -222,7 +240,7 @@ const Header = () => (
 const AccountInfo = ({ account, balance, isExpectedChainId, convertValue, quotedPrice }) => (
   <Col span={24} className="wrapper__info">
     <div className="wrapper__info-row">
-      {quotedPrice ? <p>Estimated price per token: {quotedPrice} BTRST</p> : null}
+      {quotedPrice ? <p>Estimated price per token: {quotedPrice} USDC</p> : null}
     </div>
     <div className="wrapper__info-row">
       <p>Account: </p>
@@ -250,7 +268,8 @@ const ConverterInput = ({
   setConvertValue,
   onTokenSwap,
   onDeadlineChange,
-  deadline
+  deadline,
+  minOutValue
 }) => (
   <Col span={24} className="wrapper__input">
     {isExpectedChainId ? (
@@ -288,7 +307,7 @@ const ConverterInput = ({
             </Button>
             <Button
               className="wrapper__button"
-              disabled={convertValue <= 0 || convertValue > balance}
+              disabled={convertValue <= 0 || convertValue > balance || minOutValue === 0}
               onClick={() => onTokenSwap()}
               loading={isLoading}
             >
