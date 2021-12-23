@@ -25,7 +25,7 @@ const FeeConverter = () => {
   const [deadline, setDeadline] = useState(defaultDeadline); // Slippage input by user
   const [isExpectedChainId, setIsExpectedChainId] = useState(false); // Chain type
   const [web3Api, setWeb3Api] = useState(null); // Web3 provider
-  const [quotedPrice, setQuotedPrice] = useState(null); // Quoted BTRST price based on convertValue
+  const [quotedPrice, setQuotedPrice] = useState(0); // Quoted BTRST price based on convertValue
   const [isLoading, setLoading] = useState(false); // Loading state on button when swapping
   const [minOutValue, setMinOutValue] = useState(0); // Amount input by user
 
@@ -83,7 +83,7 @@ const FeeConverter = () => {
 
   const onSlippageChange = (e) => {
     const value = Number(e.target.value);
-    if (!isNaN(value)) setSlippageValue(e.target.value || 1);
+    if (!isNaN(value)) setSlippageValue(e.target.value || defaultSlippage);
   };
 
   const onDeadlineChange = (e) => {
@@ -183,7 +183,7 @@ const FeeConverter = () => {
 
     const onQuotePrice = async () => {
       if (isExpectedChainId) {
-        const message = await getBTRSTPrice(web3Api.provider);
+        const message = await getBTRSTPrice(web3Api.provider, convertValue);
         setQuotedPrice(message);
       }
     };
@@ -192,8 +192,8 @@ const FeeConverter = () => {
       onSetBalance();
     }
 
-    if (web3Api && web3Api.provider) onQuotePrice();
-  }, [account, isExpectedChainId, web3Api]);
+    if (web3Api && web3Api.provider && convertValue) onQuotePrice();
+  }, [account, isExpectedChainId, web3Api, convertValue]);
 
   return (
     <Row className="wrapper">
@@ -240,7 +240,7 @@ const Header = () => (
 const AccountInfo = ({ account, balance, isExpectedChainId, convertValue, quotedPrice }) => (
   <Col span={24} className="wrapper__info">
     <div className="wrapper__info-row">
-      {quotedPrice ? <p>Estimated price per token: {quotedPrice} USDC</p> : null}
+      {quotedPrice ? <p>Estimated price: {quotedPrice} USDC</p> : null}
     </div>
     <div className="wrapper__info-row">
       <p>Account: </p>
@@ -278,7 +278,7 @@ const ConverterInput = ({
           <Col xs={{ span: 24 }} sm={{ span: 11 }}>
             <Input
               max={balance}
-              placeholder="Enter amount to convert"
+              placeholder="Enter USDC to convert"
               allowClear
               value={convertValue}
               onChange={(e) => onConvertValueChange(e)}
