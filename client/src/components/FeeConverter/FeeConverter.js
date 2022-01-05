@@ -57,10 +57,10 @@ const FeeConverter = () => {
       setMinOutValue(amountOutMin)
     }
 
-    if (web3Api && web3Api.provider) {
+    if (web3Api && web3Api.provider && convertValue <= balance && convertValue > 0) {
       onMinAmountHandler()
     }
-  }, [web3Api, convertValue, slippageValue, quotedPrice])
+  }, [web3Api, convertValue, slippageValue, quotedPrice, balance])
 
   const onInitProvider = async () => {
     const provider = await detectEthereumProvider({ mustBeMetaMask: true });
@@ -182,7 +182,7 @@ const FeeConverter = () => {
     };
 
     const onQuotePrice = async () => {
-      if (isExpectedChainId) {
+      if (isExpectedChainId && convertValue > 0) {
         const message = await getBTRSTPrice(web3Api.provider, convertValue);
         setQuotedPrice(message);
       }
@@ -192,8 +192,8 @@ const FeeConverter = () => {
       onSetBalance();
     }
 
-    if (web3Api && web3Api.provider && convertValue) onQuotePrice();
-  }, [account, isExpectedChainId, web3Api, convertValue]);
+    if (web3Api && web3Api.provider && convertValue && convertValue <= balance) onQuotePrice();
+  }, [account, isExpectedChainId, web3Api, convertValue, balance]);
 
   return (
     <Row className="wrapper">
@@ -206,6 +206,7 @@ const FeeConverter = () => {
             isExpectedChainId={isExpectedChainId}
             convertValue={convertValue}
             quotedPrice={quotedPrice}
+            slippageValue={slippageValue}
           />
           <ConverterInput
             isExpectedChainId={isExpectedChainId}
@@ -220,6 +221,7 @@ const FeeConverter = () => {
             onDeadlineChange={onDeadlineChange}
             deadline={deadline}
             minOutValue={minOutValue}
+            quotedPrice={quotedPrice}
           />
         </>
       ) : (
@@ -237,11 +239,14 @@ const Header = () => (
   </Col>
 );
 
-const AccountInfo = ({ account, balance, isExpectedChainId, convertValue, quotedPrice }) => (
+const AccountInfo = ({ account, balance, isExpectedChainId, convertValue, quotedPrice, slippageValue }) => (
   <Col span={24} className="wrapper__info">
     <div className="wrapper__info-row">
-      {quotedPrice ? <p>Estimated price: {quotedPrice} USDC</p> : null}
+      {quotedPrice && convertValue <= balance && convertValue ? <p>Estimated price: {quotedPrice} {typeof quotedPrice !== "string" ? "USDC" : null}</p> : null}
     </div>
+    {slippageValue < 0.3 && (
+      <p className="wrapper__warning">Transaction may fail</p>
+    )}
     <div className="wrapper__info-row">
       <p>Account: </p>
       <p>{account}</p>
@@ -269,7 +274,8 @@ const ConverterInput = ({
   onTokenSwap,
   onDeadlineChange,
   deadline,
-  minOutValue
+  minOutValue,
+  quotedPrice
 }) => (
   <Col span={24} className="wrapper__input">
     {isExpectedChainId ? (
@@ -307,7 +313,7 @@ const ConverterInput = ({
             </Button>
             <Button
               className="wrapper__button"
-              disabled={convertValue <= 0 || convertValue > balance || minOutValue === 0}
+              disabled={convertValue <= 0 || convertValue > balance || minOutValue === 0 || typeof quotedPrice === "string"}
               onClick={() => onTokenSwap()}
               loading={isLoading}
             >

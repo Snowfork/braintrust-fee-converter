@@ -58,6 +58,18 @@ export const getBTRSTPrice = async (provider, convertValue) => {
       .quoteExactInputSingle(token0, token1, fee, new web3.utils.toBN(convertValue * Math.pow(10, BTRST_decimals)), 0)
       .call();
 
+    let expectedResult = await QUOTER_CONTRACT.methods
+      .quoteExactInputSingle(token0, token1, fee, new web3.utils.toBN(1 * Math.pow(10, BTRST_decimals)), 0)
+      .call();
+
+    expectedResult = expectedResult * convertValue
+
+    const priceImpact = 1 - (result / expectedResult)
+
+    if (priceImpact > 0.5) {
+      return "Price impact too large"
+    }
+
     return result / Math.pow(10, USDC_decimals);
   } catch (error) {
     console.error(error);
