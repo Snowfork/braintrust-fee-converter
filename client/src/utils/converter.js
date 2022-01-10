@@ -55,11 +55,11 @@ export const getBTRSTPrice = async (provider, convertValue) => {
     const QUOTER_CONTRACT = new web3.eth.Contract(QUOTER_ABI, QUOTER_ADDRESS);
 
     const result = await QUOTER_CONTRACT.methods
-      .quoteExactInputSingle(token0, token1, fee, new web3.utils.toBN(convertValue * Math.pow(10, BTRST_decimals)), 0)
+      .quoteExactInputSingle(token1, token0, fee, new web3.utils.toBN(convertValue * Math.pow(10, USDC_decimals)), 0)
       .call();
 
     let expectedResult = await QUOTER_CONTRACT.methods
-      .quoteExactInputSingle(token0, token1, fee, new web3.utils.toBN(1 * Math.pow(10, BTRST_decimals)), 0)
+      .quoteExactInputSingle(token1, token0, fee, new web3.utils.toBN(1 * Math.pow(10, USDC_decimals)), 0)
       .call();
 
     expectedResult = expectedResult * convertValue
@@ -70,7 +70,7 @@ export const getBTRSTPrice = async (provider, convertValue) => {
       return "Price impact too large"
     }
 
-    return result / Math.pow(10, USDC_decimals);
+    return result / Math.pow(10, BTRST_decimals);
   } catch (error) {
     console.error(error);
     return "There is not enough liquidity to trade";

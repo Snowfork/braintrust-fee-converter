@@ -242,7 +242,7 @@ const Header = () => (
 const AccountInfo = ({ account, balance, isExpectedChainId, convertValue, quotedPrice, slippageValue }) => (
   <Col span={24} className="wrapper__info">
     <div className="wrapper__info-row">
-      {quotedPrice && convertValue <= balance && convertValue ? <p>Estimated price: {quotedPrice} {typeof quotedPrice !== "string" ? "USDC" : null}</p> : null}
+      {quotedPrice && convertValue <= balance && convertValue ? <p>Estimated Output: {quotedPrice} {typeof quotedPrice !== "string" ? "BTRST" : null}</p> : null}
     </div>
     {slippageValue < 0.3 && (
       <p className="wrapper__warning">Transaction may fail</p>

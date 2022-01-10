@@ -27,7 +27,7 @@ export const getAmountOutMin = async (provider, amount, slippage, quotePrice) =>
 
   const amountReal = new web3.utils.BN(amount * Math.pow(10, decimals));
   const slipInPerc = (100 - slippage) / 100;
-  const amountOutMin = (amount / quotePrice) * slipInPerc;
+  const amountOutMin = quotePrice * slipInPerc;
 
   return { amountOutMin, amountReal };
 };
