@@ -283,7 +283,7 @@ const ConvertInfo = ({ balance, convertValue, estimate, amountOutMin, loadingEst
         Error: Slippage too high
       </Col>
     )}
-    {slippageToleranceValue < process.env.REACT_APP_DEFAULT_SLIPPAGE && (
+    {slippageToleranceValue < process.env.REACT_APP_DEFAULT_SLIPPAGE_TOLERANCE && (
       <div className="wrapper__warning">Warning: Transaction may fail due to low slippage tolerance</div>
     )}
   </Col>
