@@ -202,7 +202,7 @@ const FeeConverter = () => {
       }
       onEstimate()
     };
-  }, [account, isExpectedChainId, web3Api, convertValue, balance]);
+  }, [account, isExpectedChainId, web3Api, convertValue, balance]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const slippageTooHigh = estimate.estimatedSlippage >= process.env.REACT_APP_MAXIMUM_BASE_SLIPPAGE;
 
