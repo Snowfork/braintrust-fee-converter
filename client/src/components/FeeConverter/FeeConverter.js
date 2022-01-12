@@ -5,7 +5,7 @@ import Web3 from "web3";
 
 import { getUSDCBalance } from "../../utils/usdc";
 import { estimateBTRSTOutput, swapToBTRST } from "../../utils/converter";
-import { getAmountOutMin } from "../../utils/shared";
+import { getAmountOutMin, makeCancelable } from "../../utils/shared";
 
 import logo from "../../assets/braintrust.png";
 import usdc from "../../assets/usdc.svg";
@@ -29,6 +29,7 @@ const FeeConverter = () => {
   const [amountOutMin, setAmountOutMin] = useState(0); // Amount out minimum used for swap
   const [loadingEstimate, setLoadingEstimate] = useState(false); // Whether swap estimate is loading or not
   const [isLoading, setLoading] = useState(false); // Loading state on button when swapping
+  const [lastEstimatePromise, setLastEstimatePromise] = useState(undefined); // Track estimate promise so it can be cancelled if needed
 
   const onTokenSwap = async () => {
     setLoading(true);
@@ -182,9 +183,12 @@ const FeeConverter = () => {
     const onEstimate = async () => {
       if (isExpectedChainId && convertValue > 0) {
         setLoadingEstimate(true);
-        const estimate = await estimateBTRSTOutput(web3Api.provider, convertValue);
-        setLoadingEstimate(false);
-        setEstimate(estimate);
+        const cancellablePromise = makeCancelable(estimateBTRSTOutput(web3Api.provider, convertValue))
+        cancellablePromise.promise.then(estimate => {
+          setLoadingEstimate(false);
+          setEstimate(estimate);
+        }).catch(e => console.log(`cancelled estimate for ${convertValue}`));
+        setLastEstimatePromise(cancellablePromise);
       }
     };
 
@@ -192,7 +196,12 @@ const FeeConverter = () => {
       onSetBalance();
     }
 
-    if (web3Api && web3Api.provider && convertValue) onEstimate();
+    if (web3Api && web3Api.provider && convertValue) {
+      if (lastEstimatePromise) {
+        lastEstimatePromise.cancel();
+      }
+      onEstimate()
+    };
   }, [account, isExpectedChainId, web3Api, convertValue, balance]);
 
   const slippageTooHigh = estimate.estimatedSlippage >= process.env.REACT_APP_MAXIMUM_BASE_SLIPPAGE;
