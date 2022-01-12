@@ -11,7 +11,7 @@ const QUOTER_ADDRESS = process.env.REACT_APP_UNI_QUOTER_ADDRESS;
 const USDC_ADDRESS = process.env.REACT_APP_USDC_ADDRESS;
 const BTRST_ADDRESS = process.env.REACT_APP_BTRST_ADDRESS;
 
-export const swapToBTRST = async (provider, amount, slippage, quotePrice, deadline) => {
+export const swapToBTRST = async (provider, amountIn, slippage, estimatedAmountOut, deadline) => {
   try {
     const web3 = new Web3(provider);
     const CONVERTER_CONTRACT = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
@@ -22,13 +22,13 @@ export const swapToBTRST = async (provider, amount, slippage, quotePrice, deadli
       method: "eth_requestAccounts"
     })
 
-    await approveUSDC(provider, amount);
-    const { amountOutMin, amountReal } = await getAmountOutMin(provider, amount, slippage, quotePrice)
+    await approveUSDC(provider, amountIn);
+    const { amountOutMin, amountInBN } = await getAmountOutMin(provider, amountIn, slippage, estimatedAmountOut)
     const txnDeadline = Math.floor(Date.now() / 1000) + deadline
     const amountOutMinimum = new web3.utils.toBN(amountOutMin * Math.pow(10, btrstDecimal))
 
     return await CONVERTER_CONTRACT.methods
-      .swapExactInputSingle(amountReal, amountOutMinimum, txnDeadline)
+      .swapExactInputSingle(amountInBN, amountOutMinimum, txnDeadline)
       .send({ from: accounts[0] })
       .then((transaction) => transaction.status);
   } catch (error) {
@@ -37,16 +37,15 @@ export const swapToBTRST = async (provider, amount, slippage, quotePrice, deadli
   }
 };
 
-export const getBTRSTPrice = async (provider, convertValue) => {
+export const estimateBTRSTOutput = async (provider, convertValue) => {
+  let error = undefined;
   try {
     const web3 = new Web3(provider);
     const POOL_CONTRACT = new web3.eth.Contract(IUniswapV3PoolABI, POOL_ADDRESS, provider);
     const USDC_CONTRACT = new web3.eth.Contract(USDC_ABI, USDC_ADDRESS);
     const BTRST_CONTRACT = new web3.eth.Contract(BTRST_ABI, BTRST_ADDRESS);
 
-    const [token0, token1, fee, USDC_decimals, BTRST_decimals] = await Promise.all([
-      POOL_CONTRACT.methods.token0().call(),
-      POOL_CONTRACT.methods.token1().call(),
+    const [fee, USDC_decimals, BTRST_decimals] = await Promise.all([
       POOL_CONTRACT.methods.fee().call(),
       getERC20Decimal(USDC_CONTRACT),
       getERC20Decimal(BTRST_CONTRACT),
@@ -54,14 +53,33 @@ export const getBTRSTPrice = async (provider, convertValue) => {
 
     const QUOTER_CONTRACT = new web3.eth.Contract(QUOTER_ABI, QUOTER_ADDRESS);
 
-    const result = await QUOTER_CONTRACT.methods
-      .quoteExactInputSingle(token0, token1, fee, new web3.utils.toBN(convertValue * Math.pow(10, BTRST_decimals)), 0)
+    // Price when swapping a single token
+    const currentPrice = await QUOTER_CONTRACT.methods
+      .quoteExactInputSingle(USDC_ADDRESS, BTRST_ADDRESS, fee, new web3.utils.toBN(1 * Math.pow(10, USDC_decimals)), 0)
       .call();
 
-    return result / Math.pow(10, USDC_decimals);
+    const outputExcludingSlippage = currentPrice * convertValue
+
+    const outputIncludingSlippage = await QUOTER_CONTRACT.methods
+      .quoteExactInputSingle(USDC_ADDRESS, BTRST_ADDRESS, fee, new web3.utils.toBN(convertValue * Math.pow(10, USDC_decimals)), 0)
+      .call();
+
+    const estimatedSlippage = 1 - (outputIncludingSlippage / outputExcludingSlippage)
+
+    const estimatedPrice = convertValue / web3.utils.fromWei(outputIncludingSlippage);
+
+    return {
+      currentPrice: 1 / web3.utils.fromWei(currentPrice),
+      estimatedPrice,
+      estimatedOutput: outputIncludingSlippage / Math.pow(10, BTRST_decimals),
+      estimatedSlippage,
+      error,
+    }
   } catch (error) {
     console.error(error);
-    return "There is not enough liquidity to trade";
+    return {
+      error: "Error estimating swap output",
+    };
   }
 };
 

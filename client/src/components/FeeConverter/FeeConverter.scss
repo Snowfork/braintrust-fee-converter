@@ -44,6 +44,8 @@
     background-color: rgba(0, 0, 0, 0.2);
     padding: 1em;
 
+    margin-top: 0.5em;
+
     p {
       display: flex;
       overflow: hidden;
@@ -93,6 +95,10 @@
 
   &__warning {
     color: $text-color-muted;
+  }
+
+  &__error {
+    color: #ff5c5c;
   }
 
   &__buttons {
@@ -161,6 +167,7 @@
   &__slippage {
     display: flex;
     justify-content: flex-end;
+    flex-direction: column;
 
     @media only screen and (max-width: 600px) {
       margin-top: auto;
