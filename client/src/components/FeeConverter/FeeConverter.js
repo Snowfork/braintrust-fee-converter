@@ -26,6 +26,7 @@ const FeeConverter = () => {
   const [isExpectedChainId, setIsExpectedChainId] = useState(false); // Chain type
   const [web3Api, setWeb3Api] = useState(null); // Web3 provider
   const [quotedPrice, setQuotedPrice] = useState(0); // Quoted BTRST price based on convertValue
+  const [loadingPrice, setLoadingPrice] = useState(false); // Whether price quote is loading or not
   const [isLoading, setLoading] = useState(false); // Loading state on button when swapping
   const [minOutValue, setMinOutValue] = useState(0); // Amount input by user
 
@@ -183,7 +184,9 @@ const FeeConverter = () => {
 
     const onQuotePrice = async () => {
       if (isExpectedChainId && convertValue > 0) {
+        setLoadingPrice(true);
         const message = await getBTRSTPrice(web3Api.provider, convertValue);
+        setLoadingPrice(false);
         setQuotedPrice(message);
       }
     };
@@ -204,8 +207,6 @@ const FeeConverter = () => {
             account={account}
             balance={balance}
             isExpectedChainId={isExpectedChainId}
-            convertValue={convertValue}
-            quotedPrice={quotedPrice}
             slippageValue={slippageValue}
           />
           <ConverterInput
@@ -222,6 +223,7 @@ const FeeConverter = () => {
             deadline={deadline}
             minOutValue={minOutValue}
             quotedPrice={quotedPrice}
+            loadingPrice={loadingPrice}
           />
         </>
       ) : (
@@ -239,11 +241,8 @@ const Header = () => (
   </Col>
 );
 
-const AccountInfo = ({ account, balance, isExpectedChainId, convertValue, quotedPrice, slippageValue }) => (
+const AccountInfo = ({ account, balance, isExpectedChainId, slippageValue }) => (
   <Col span={24} className="wrapper__info">
-    <div className="wrapper__info-row">
-      {quotedPrice && convertValue <= balance && convertValue ? <p>Estimated Output: {quotedPrice} {typeof quotedPrice !== "string" ? "BTRST" : null}</p> : null}
-    </div>
     {slippageValue < 0.3 && (
       <p className="wrapper__warning">Transaction may fail</p>
     )}
@@ -262,6 +261,26 @@ const AccountInfo = ({ account, balance, isExpectedChainId, convertValue, quoted
   </Col>
 );
 
+const ConvertInfo = ({ balance, convertValue, quotedPrice, loadingPrice, slippageValue }) => (
+  <Col span={24} style={{ marginTop: '0.5em' }}>
+    {convertValue > balance && (
+      <Col span={24}>
+        <p className="wrapper__warning">Insufficient balance for this swap</p>
+      </Col>
+    )}
+    {loadingPrice && <Col span={24}>
+      <p className="wrapper__warning">Loading expected price...</p>
+    </Col>
+    }
+    {!loadingPrice && <div className="wrapper__info-row">
+      {quotedPrice && convertValue <= balance && convertValue ? <p>Estimated Output: {quotedPrice} {typeof quotedPrice !== "string" ? "BTRST" : null}</p> : null}
+    </div>}
+    {slippageValue < 0.3 && (
+      <p className="wrapper__warning">Transaction may fail</p>
+    )}
+  </Col>
+);
+
 const ConverterInput = ({
   isExpectedChainId,
   isLoading,
@@ -275,13 +294,14 @@ const ConverterInput = ({
   onDeadlineChange,
   deadline,
   minOutValue,
-  quotedPrice
+  quotedPrice,
+  loadingPrice
 }) => (
-  <Col span={24} className="wrapper__input">
+  <Col xs={{ span: 24 }} sm={{ span: 24 }} >
     {isExpectedChainId ? (
-      <>
-        <Row>
-          <Col xs={{ span: 24 }} sm={{ span: 11 }}>
+      <Row className="wrapper__input">
+        <Col xs={{ span: 24 }} sm={{ span: 11 }}>
+          <Row>
             <Input
               max={balance}
               placeholder="Enter USDC to convert"
@@ -289,52 +309,58 @@ const ConverterInput = ({
               value={convertValue}
               onChange={(e) => onConvertValueChange(e)}
             />
-          </Col>
-          <Col xs={{ span: 24 }} sm={{ span: 11, offset: 2 }}>
-            <div className="wrapper__slippage">
+            {convertValue && convertValue !== '0' ? <ConvertInfo
+              balance={balance}
+              convertValue={convertValue}
+              quotedPrice={quotedPrice}
+              loadingPrice={loadingPrice}
+              slippageValue={slippageValue}
+            /> : <></>}
+          </Row>
+          <Row >
+            <Col xs={{ span: 24 }} lg={{ span: 24 }} className="wrapper__input wrapper__buttons">
+              <Button
+                className="wrapper__button"
+                disabled={convertValue === balance}
+                onClick={() => setConvertValue(balance)}
+              >
+                Max
+              </Button>
+              <Button
+                className="wrapper__button"
+                disabled={convertValue <= 0 || convertValue > balance || minOutValue === 0 || typeof quotedPrice === "string"}
+                onClick={() => onTokenSwap()}
+                loading={isLoading}
+              >
+                Convert
+              </Button>
+            </Col>
+          </Row>
+        </Col>
+        <Col xs={{ span: 24 }} sm={{ span: 11, offset: 2 }}>
+          <Row className="wrapper__slippage">
+            <div>
               <span>Slippage (%)</span>
               <Input allowClear defaultValue={1} value={slippageValue} onChange={(e) => onSlippageChange(e)} />
             </div>
-          </Col>
-          {convertValue > balance && (
-            <Col span={24}>
-              <p className="wrapper__warning">Insufficient balance for this swap</p>
-            </Col>
-          )}
-        </Row>
-        <Row className="wrapper__footer">
-          <Col xs={{ span: 24 }} lg={{ span: 12 }} className="wrapper__buttons">
-            <Button
-              className="wrapper__button"
-              disabled={convertValue === balance}
-              onClick={() => setConvertValue(balance)}
-            >
-              Max
-            </Button>
-            <Button
-              className="wrapper__button"
-              disabled={convertValue <= 0 || convertValue > balance || minOutValue === 0 || typeof quotedPrice === "string"}
-              onClick={() => onTokenSwap()}
-              loading={isLoading}
-            >
-              Convert
-            </Button>
-          </Col>
-          <Col xs={{ span: 24 }} sm={{ span: 10, offset: 2 }}>
-            <div className="wrapper__slippage">
+          </Row>
+          <Row className="wrapper__slippage">
+            <div className="wrapper__input">
               <span>Deadline (s)</span>
               <Input allowClear defaultValue={1200} value={deadline} onChange={(e) => onDeadlineChange(e)} />
             </div>
-          </Col>
-        </Row>
-      </>
+          </Row>
+        </Col>
+      </Row>
     ) : (
-      <div>
-        {!expectedChainId && <p>Did you forget to set your .env config?</p>}
-        {expectedChainId ? <p>Please connect to the {expectedChainId === 1 && 'Mainnet'} {expectedChainId === 4 && 'Rinkeby'} network.</p> : <></>}
-      </div>
+      <Col>
+        <div>
+          {!expectedChainId && <p>Did you forget to set your .env config?</p>}
+          {expectedChainId ? <p>Please connect to the {expectedChainId === 1 && 'Mainnet'} {expectedChainId === 4 && 'Rinkeby'} network.</p> : <></>}
+        </div>
+      </Col>
     )}
-  </Col>
+  </Col >
 );
 
 const Unconnected = ({ onInitProvider }) => (
