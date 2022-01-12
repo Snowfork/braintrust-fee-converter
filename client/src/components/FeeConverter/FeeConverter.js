@@ -241,11 +241,8 @@ const Header = () => (
   </Col>
 );
 
-const AccountInfo = ({ account, balance, isExpectedChainId, slippageValue }) => (
+const AccountInfo = ({ account, balance, isExpectedChainId }) => (
   <Col span={24} className="wrapper__info">
-    {slippageValue < 0.3 && (
-      <p className="wrapper__warning">Transaction may fail</p>
-    )}
     <div className="wrapper__info-row">
       <p>Account: </p>
       <p>{account}</p>
@@ -275,8 +272,8 @@ const ConvertInfo = ({ balance, convertValue, quotedPrice, loadingPrice, slippag
     {!loadingPrice && <div className="wrapper__info-row">
       {quotedPrice && convertValue <= balance && convertValue ? <p>Estimated Output: {quotedPrice} {typeof quotedPrice !== "string" ? "BTRST" : null}</p> : null}
     </div>}
-    {slippageValue < 0.3 && (
-      <p className="wrapper__warning">Transaction may fail</p>
+    {!loadingPrice && slippageValue < 0.3 && (
+      <p className="wrapper__warning">Warning: Transaction may fail due to slippage higher than allowed</p>
     )}
   </Col>
 );
@@ -328,7 +325,7 @@ const ConverterInput = ({
               </Button>
               <Button
                 className="wrapper__button"
-                disabled={convertValue <= 0 || convertValue > balance || minOutValue === 0 || typeof quotedPrice === "string"}
+                disabled={convertValue <= 0 || convertValue > balance || minOutValue === 0 || typeof quotedPrice === "string" || loadingPrice}
                 onClick={() => onTokenSwap()}
                 loading={isLoading}
               >
