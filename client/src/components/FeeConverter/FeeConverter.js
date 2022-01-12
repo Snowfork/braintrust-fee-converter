@@ -4,41 +4,40 @@ import detectEthereumProvider from "@metamask/detect-provider";
 import Web3 from "web3";
 
 import { getUSDCBalance } from "../../utils/usdc";
-import { getBTRSTPrice, swapToBTRST } from "../../utils/converter";
+import { estimateBTRSTOutput, swapToBTRST } from "../../utils/converter";
+import { getAmountOutMin } from "../../utils/shared";
 
 import logo from "../../assets/braintrust.png";
 import usdc from "../../assets/usdc.svg";
 
 import "./FeeConverter.scss";
-import { getAmountOutMin } from "../../utils/shared";
 
 const expectedChainId = Number(process.env.REACT_APP_EXPECTED_CHAIN_ID);
 
 const FeeConverter = () => {
-  const defaultSlippage = Number(process.env.REACT_APP_DEFAULT_SLIPPAGE);
+  const defaultSlippageTolerance = Number(process.env.REACT_APP_DEFAULT_SLIPPAGE_TOLERANCE);
   const defaultDeadline = Number(process.env.REACT_APP_DEFAULT_DEADLINE);
 
   const [account, setAccount] = useState(null); // Currently connected Metamask account
   const [balance, setBalance] = useState(0); // Balance of account in USDC
   const [convertValue, setConvertValue] = useState(0); // Amount input by user
-  const [slippageValue, setSlippageValue] = useState(defaultSlippage); // Slippage input by user
+  const [slippageToleranceValue, setSlippageToleranceValue] = useState(defaultSlippageTolerance); // Slippage input by user
   const [deadline, setDeadline] = useState(defaultDeadline); // Slippage input by user
   const [isExpectedChainId, setIsExpectedChainId] = useState(false); // Chain type
   const [web3Api, setWeb3Api] = useState(null); // Web3 provider
-  const [quotedPrice, setQuotedPrice] = useState(0); // Quoted BTRST price based on convertValue
-  const [loadingPrice, setLoadingPrice] = useState(false); // Whether price quote is loading or not
+  const [estimate, setEstimate] = useState({}); // Estimated results of BTRST swap based on convertValue
+  const [amountOutMin, setAmountOutMin] = useState(0); // Amount out minimum used for swap
+  const [loadingEstimate, setLoadingEstimate] = useState(false); // Whether swap estimate is loading or not
   const [isLoading, setLoading] = useState(false); // Loading state on button when swapping
-  const [minOutValue, setMinOutValue] = useState(0); // Amount input by user
 
   const onTokenSwap = async () => {
     setLoading(true);
-    const swap = await swapToBTRST(web3Api.provider, convertValue, slippageValue, quotedPrice, deadline);
+    const swap = await swapToBTRST(web3Api.provider, convertValue, slippageToleranceValue, estimate.estimatedOutput, deadline);
 
     if (swap) {
       const balance = await getUSDCBalance(account, web3Api.provider);
       if (balance) setBalance(balance);
       setConvertValue(0);
-      setMinOutValue(0);
     }
 
     setLoading(false);
@@ -49,19 +48,6 @@ const FeeConverter = () => {
       setConvertValue(e.target.value);
     }
   };
-
-
-
-  useEffect(() => {
-    const onMinAmountHandler = async () => {
-      const { amountOutMin } = await getAmountOutMin(web3Api.provider, convertValue, slippageValue, quotedPrice)
-      setMinOutValue(amountOutMin)
-    }
-
-    if (web3Api && web3Api.provider && convertValue <= balance && convertValue > 0) {
-      onMinAmountHandler()
-    }
-  }, [web3Api, convertValue, slippageValue, quotedPrice, balance])
 
   const onInitProvider = async () => {
     const provider = await detectEthereumProvider({ mustBeMetaMask: true });
@@ -84,7 +70,7 @@ const FeeConverter = () => {
 
   const onSlippageChange = (e) => {
     const value = Number(e.target.value);
-    if (!isNaN(value)) setSlippageValue(e.target.value || defaultSlippage);
+    if (!isNaN(value)) setSlippageToleranceValue(e.target.value || defaultSlippageTolerance);
   };
 
   const onDeadlineChange = (e) => {
@@ -174,6 +160,17 @@ const FeeConverter = () => {
   }, [web3Api]);
 
   useEffect(() => {
+    const onMinAmountHandler = async () => {
+      const { amountOutMin } = await getAmountOutMin(web3Api.provider, convertValue, slippageToleranceValue, estimate.estimatedOutput)
+      setAmountOutMin(amountOutMin)
+    }
+
+    if (web3Api && web3Api.provider && convertValue > 0) {
+      onMinAmountHandler()
+    }
+  }, [web3Api, convertValue, slippageToleranceValue, estimate])
+
+  useEffect(() => {
     const onSetBalance = async () => {
       // Balance is readjusted based on currently connected account
       if (isExpectedChainId) {
@@ -182,12 +179,12 @@ const FeeConverter = () => {
       }
     };
 
-    const onQuotePrice = async () => {
+    const onEstimate = async () => {
       if (isExpectedChainId && convertValue > 0) {
-        setLoadingPrice(true);
-        const message = await getBTRSTPrice(web3Api.provider, convertValue);
-        setLoadingPrice(false);
-        setQuotedPrice(message);
+        setLoadingEstimate(true);
+        const estimate = await estimateBTRSTOutput(web3Api.provider, convertValue);
+        setLoadingEstimate(false);
+        setEstimate(estimate);
       }
     };
 
@@ -195,8 +192,10 @@ const FeeConverter = () => {
       onSetBalance();
     }
 
-    if (web3Api && web3Api.provider && convertValue && convertValue <= balance) onQuotePrice();
+    if (web3Api && web3Api.provider && convertValue) onEstimate();
   }, [account, isExpectedChainId, web3Api, convertValue, balance]);
+
+  const slippageTooHigh = estimate.estimatedSlippage >= process.env.REACT_APP_MAXIMUM_BASE_SLIPPAGE;
 
   return (
     <Row className="wrapper">
@@ -207,13 +206,12 @@ const FeeConverter = () => {
             account={account}
             balance={balance}
             isExpectedChainId={isExpectedChainId}
-            slippageValue={slippageValue}
           />
           <ConverterInput
             isExpectedChainId={isExpectedChainId}
             balance={balance}
             convertValue={convertValue}
-            slippageValue={slippageValue}
+            slippageToleranceValue={slippageToleranceValue}
             isLoading={isLoading}
             onConvertValueChange={onConvertValueChange}
             onSlippageChange={onSlippageChange}
@@ -221,9 +219,10 @@ const FeeConverter = () => {
             onTokenSwap={onTokenSwap}
             onDeadlineChange={onDeadlineChange}
             deadline={deadline}
-            minOutValue={minOutValue}
-            quotedPrice={quotedPrice}
-            loadingPrice={loadingPrice}
+            estimate={estimate}
+            amountOutMin={amountOutMin}
+            slippageTooHigh={slippageTooHigh}
+            loadingEstimate={loadingEstimate}
           />
         </>
       ) : (
@@ -258,22 +257,34 @@ const AccountInfo = ({ account, balance, isExpectedChainId }) => (
   </Col>
 );
 
-const ConvertInfo = ({ balance, convertValue, quotedPrice, loadingPrice, slippageValue }) => (
+const ConvertInfo = ({ balance, convertValue, estimate, amountOutMin, loadingEstimate, slippageTooHigh, slippageToleranceValue }) => (
   <Col span={24} style={{ marginTop: '0.5em' }}>
-    {convertValue > balance && (
-      <Col span={24}>
-        <p className="wrapper__warning">Insufficient balance for this swap</p>
-      </Col>
-    )}
-    {loadingPrice && <Col span={24}>
-      <p className="wrapper__warning">Loading expected price...</p>
+    {loadingEstimate && <Col span={24} className="">
+      <p>Loading expected price...</p>
     </Col>
     }
-    {!loadingPrice && <div className="wrapper__info-row">
-      {quotedPrice && convertValue <= balance && convertValue ? <p>Estimated Output: {quotedPrice} {typeof quotedPrice !== "string" ? "BTRST" : null}</p> : null}
-    </div>}
-    {!loadingPrice && slippageValue < 0.3 && (
-      <p className="wrapper__warning">Warning: Transaction may fail due to slippage higher than allowed</p>
+    {!loadingEstimate && <Col span={24}>
+      {estimate.estimatedOutput && convertValue ? <div>
+        <div>Current BTRST Price: {estimate.currentPrice.toFixed(2)} USDC per BTRST</div>
+        <div>Expected Swap Price: ~{estimate.estimatedPrice.toFixed(2)} USDC per BTRST</div>
+        <div>Expected Slippage: ~{(estimate.estimatedSlippage * 100).toFixed(2)}%</div>
+        <div>Expected BTRST swapped: {estimate.estimatedOutput.toFixed(2)} BTRST</div>
+        <div>Minimum BTRST swapped: {amountOutMin.toFixed(2)}</div>
+      </div> : null}
+      {estimate.error && <p className="wrapper__error">{estimate.error}</p>}
+    </Col>}
+    {convertValue > balance && (
+      <Col span={24} className="wrapper__error">
+        Error: Insufficient balance for this swap
+      </Col>
+    )}
+    {!loadingEstimate && slippageTooHigh && (
+      <Col span={24} className="wrapper__error">
+        Error: Slippage too high
+      </Col>
+    )}
+    {slippageToleranceValue < process.env.REACT_APP_DEFAULT_SLIPPAGE && (
+      <div className="wrapper__warning">Warning: Transaction may fail due to low slippage tolerance</div>
     )}
   </Col>
 );
@@ -283,72 +294,81 @@ const ConverterInput = ({
   isLoading,
   balance,
   convertValue,
-  slippageValue,
+  slippageToleranceValue,
   onConvertValueChange,
   onSlippageChange,
   setConvertValue,
   onTokenSwap,
   onDeadlineChange,
   deadline,
-  minOutValue,
-  quotedPrice,
-  loadingPrice
+  estimate,
+  amountOutMin,
+  slippageTooHigh,
+  loadingEstimate
 }) => (
   <Col xs={{ span: 24 }} sm={{ span: 24 }} >
     {isExpectedChainId ? (
-      <Row className="wrapper__input">
-        <Col xs={{ span: 24 }} sm={{ span: 11 }}>
+      <>
+        <Row className="wrapper__input">
+          <Col xs={{ span: 24 }} sm={{ span: 11 }}>
+            <Row>
+              <Input
+                max={balance}
+                placeholder="Enter USDC to convert"
+                allowClear
+                value={convertValue}
+                onChange={(e) => onConvertValueChange(e)}
+              />
+            </Row>
+          </Col>
+          <Col xs={{ span: 24 }} sm={{ span: 11, offset: 2 }}>
+            <Row className="wrapper__slippage">
+              <div>Extra Slippage Tolerance (%)</div>
+              <Input allowClear defaultValue={1} value={slippageToleranceValue} onChange={(e) => onSlippageChange(e)} />
+            </Row>
+            <Row className="wrapper__slippage">
+              <div className="wrapper__input">
+                <span>Deadline (s)</span>
+                <Input allowClear defaultValue={1200} value={deadline} onChange={(e) => onDeadlineChange(e)} />
+              </div>
+            </Row>
+          </Col>
+        </Row>
+        {convertValue && convertValue !== '0' ? <>
           <Row>
-            <Input
-              max={balance}
-              placeholder="Enter USDC to convert"
-              allowClear
-              value={convertValue}
-              onChange={(e) => onConvertValueChange(e)}
-            />
-            {convertValue && convertValue !== '0' ? <ConvertInfo
-              balance={balance}
-              convertValue={convertValue}
-              quotedPrice={quotedPrice}
-              loadingPrice={loadingPrice}
-              slippageValue={slippageValue}
-            /> : <></>}
-          </Row>
-          <Row >
-            <Col xs={{ span: 24 }} lg={{ span: 24 }} className="wrapper__input wrapper__buttons">
-              <Button
-                className="wrapper__button"
-                disabled={convertValue === balance}
-                onClick={() => setConvertValue(balance)}
-              >
-                Max
-              </Button>
-              <Button
-                className="wrapper__button"
-                disabled={convertValue <= 0 || convertValue > balance || minOutValue === 0 || typeof quotedPrice === "string" || loadingPrice}
-                onClick={() => onTokenSwap()}
-                loading={isLoading}
-              >
-                Convert
-              </Button>
+            <Col>
+              <ConvertInfo
+                balance={balance}
+                convertValue={convertValue}
+                estimate={estimate}
+                amountOutMin={amountOutMin}
+                slippageTooHigh={slippageTooHigh}
+                loadingEstimate={loadingEstimate}
+                slippageToleranceValue={slippageToleranceValue}
+              />
             </Col>
           </Row>
-        </Col>
-        <Col xs={{ span: 24 }} sm={{ span: 11, offset: 2 }}>
-          <Row className="wrapper__slippage">
-            <div>
-              <span>Slippage (%)</span>
-              <Input allowClear defaultValue={1} value={slippageValue} onChange={(e) => onSlippageChange(e)} />
-            </div>
-          </Row>
-          <Row className="wrapper__slippage">
-            <div className="wrapper__input">
-              <span>Deadline (s)</span>
-              <Input allowClear defaultValue={1200} value={deadline} onChange={(e) => onDeadlineChange(e)} />
-            </div>
-          </Row>
-        </Col>
-      </Row>
+        </> : undefined}
+        <Row >
+          <Col xs={{ span: 24 }} lg={{ span: 24 }} className="wrapper__input wrapper__buttons">
+            <Button
+              className="wrapper__button"
+              disabled={convertValue === balance}
+              onClick={() => setConvertValue(balance)}
+            >
+              Max
+            </Button>
+            <Button
+              className="wrapper__button"
+              disabled={convertValue <= 0 || convertValue > balance || estimate.error || loadingEstimate || slippageTooHigh}
+              onClick={() => onTokenSwap()}
+              loading={isLoading}
+            >
+              Convert
+            </Button>
+          </Col>
+        </Row>
+      </>
     ) : (
       <Col>
         <div>

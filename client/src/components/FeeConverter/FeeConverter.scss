@@ -97,6 +97,10 @@
     color: $text-color-muted;
   }
 
+  &__error {
+    color: #ff5c5c;
+  }
+
   &__buttons {
     @media only screen and (max-width: 600px) {
       margin-top: 1em;
@@ -163,6 +167,7 @@
   &__slippage {
     display: flex;
     justify-content: flex-end;
+    flex-direction: column;
 
     @media only screen and (max-width: 600px) {
       margin-top: auto;
