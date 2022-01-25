@@ -166,7 +166,7 @@ const FeeConverter = () => {
       setAmountOutMin(amountOutMin)
     }
 
-    if (web3Api && web3Api.provider && convertValue > 0) {
+    if (web3Api && web3Api.provider && convertValue > 0 && estimate.estimatedOutput) {
       onMinAmountHandler()
     }
   }, [web3Api, convertValue, slippageToleranceValue, estimate])
@@ -278,8 +278,8 @@ const ConvertInfo = ({ balance, convertValue, estimate, amountOutMin, loadingEst
         <div>Current BTRST Price: {estimate.currentPrice.toFixed(2)} USDC per BTRST</div>
         <div>Expected Swap Price: ~{estimate.estimatedPrice.toFixed(2)} USDC per BTRST</div>
         <div>Expected Slippage: ~{(estimate.estimatedSlippage * 100).toFixed(2)}%</div>
-        <div>Expected BTRST swapped: {estimate.estimatedOutput.toFixed(2)} BTRST</div>
-        <div>Minimum BTRST swapped: {amountOutMin.toFixed(2)}</div>
+        <div>Expected BTRST swapped: {estimate.estimatedOutput.toNumber().toFixed(2)} BTRST</div>
+        <div>Minimum BTRST swapped: {amountOutMin && amountOutMin.toNumber().toFixed(2)}</div>
       </div> : null}
       {estimate.error && <p className="wrapper__error">{estimate.error}</p>}
     </Col>}
