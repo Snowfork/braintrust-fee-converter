@@ -24,8 +24,9 @@ export const swapToBTRST = async (provider, amountIn, slippage, estimatedAmountO
 
     await approveUSDC(provider, amountIn);
     const { amountOutMin, amountInBN } = await getAmountOutMin(provider, amountIn, slippage, estimatedAmountOut)
+
     const txnDeadline = Math.floor(Date.now() / 1000) + deadline
-    const amountOutMinimum = new web3.utils.toBN(amountOutMin * Math.pow(10, btrstDecimal))
+    const amountOutMinimum = new web3.utils.toBN(amountOutMin).mul(new web3.utils.toBN(Math.pow(10, btrstDecimal)))
 
     return await CONVERTER_CONTRACT.methods
       .swapExactInputSingle(amountInBN, amountOutMinimum, txnDeadline)
@@ -71,7 +72,7 @@ export const estimateBTRSTOutput = async (provider, convertValue) => {
     return {
       currentPrice: 1 / web3.utils.fromWei(currentPrice),
       estimatedPrice,
-      estimatedOutput: outputIncludingSlippage / Math.pow(10, BTRST_decimals),
+      estimatedOutput: web3.utils.toBN(outputIncludingSlippage).div(web3.utils.toBN(Math.pow(10, BTRST_decimals))),
       estimatedSlippage,
       error,
     }
