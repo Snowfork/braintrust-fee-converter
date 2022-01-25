@@ -25,7 +25,7 @@ export const getAmountOutMin = async (provider, amountIn, slippage, estimatedAmo
   const USDC_CONTRACT = new web3.eth.Contract(USDC_ABI, USDC_ADDRESS);
   const decimals = await getERC20Decimal(USDC_CONTRACT)
 
-  const amountInBN = new web3.utils.BN(amountIn).mul(new web3.utils.BN(Math.pow(10, decimals)));
+  const amountInBN = new web3.utils.BN(amountIn * Math.pow(10, decimals));
   const slipInPerc = new web3.utils.BN(100 - slippage);
   const amountOutMin = estimatedAmountOut.mul(slipInPerc).div(new web3.utils.BN(100));
 
