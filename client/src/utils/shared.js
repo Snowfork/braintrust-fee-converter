@@ -1,8 +1,9 @@
 import Web3 from "web3";
-import { USDC_ABI } from "./abi";
+import { USDC_ABI, BTRST_ABI } from "./abi";
 
 const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS;
 const USDC_ADDRESS = process.env.REACT_APP_USDC_ADDRESS;
+const BTRST_ADDRESS = process.env.REACT_APP_BTRST_ADDRESS;
 
 export const getERC20Balance = async (contract, address) => {
   return contract.methods.balanceOf(address).call();
@@ -20,16 +21,24 @@ export const getERC20Decimal = async (contract) => {
   return await contract.methods.decimals().call();
 };
 
+// amountIn expected in USDC as float with decimals. estimatedAmountOut expected as BN.
 export const getAmountOutMin = async (provider, amountIn, slippage, estimatedAmountOut) => {
   const web3 = new Web3(provider);
   const USDC_CONTRACT = new web3.eth.Contract(USDC_ABI, USDC_ADDRESS);
-  const decimals = await getERC20Decimal(USDC_CONTRACT)
+  const BTRST_CONTRACT = new web3.eth.Contract(BTRST_ABI, BTRST_ADDRESS);
 
-  const amountInBN = new web3.utils.BN(amountIn * Math.pow(10, decimals));
+  const [USDC_decimals, BTRST_decimals] = await Promise.all([
+    getERC20Decimal(USDC_CONTRACT),
+    getERC20Decimal(BTRST_CONTRACT),
+  ]);
+
+  const amountInBN = new web3.utils.BN(amountIn * Math.pow(10, USDC_decimals));
+
   const slipInPerc = new web3.utils.BN(100 - slippage);
   const amountOutMin = estimatedAmountOut.mul(slipInPerc).div(new web3.utils.BN(100));
+  const amountOutMinFormatted = Math.floor(parseFloat(web3.utils.fromWei(amountOutMin)) * 100) / 100;
 
-  return { amountOutMin, amountInBN };
+  return { amountOutMin, amountOutMinFormatted, amountInBN };
 };
 
 export const makeCancelable = (promise) => {

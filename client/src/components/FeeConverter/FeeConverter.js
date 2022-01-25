@@ -26,7 +26,7 @@ const FeeConverter = () => {
   const [isExpectedChainId, setIsExpectedChainId] = useState(false); // Chain type
   const [web3Api, setWeb3Api] = useState(null); // Web3 provider
   const [estimate, setEstimate] = useState({}); // Estimated results of BTRST swap based on convertValue
-  const [amountOutMin, setAmountOutMin] = useState(0); // Amount out minimum used for swap
+  const [amountOutMinFormatted, setAmountOutMinFormatted] = useState(0); // Amount out minimum used for swap
   const [loadingEstimate, setLoadingEstimate] = useState(false); // Whether swap estimate is loading or not
   const [isLoading, setLoading] = useState(false); // Loading state on button when swapping
   const [lastEstimatePromise, setLastEstimatePromise] = useState(undefined); // Track estimate promise so it can be cancelled if needed
@@ -162,8 +162,8 @@ const FeeConverter = () => {
 
   useEffect(() => {
     const onMinAmountHandler = async () => {
-      const { amountOutMin } = await getAmountOutMin(web3Api.provider, convertValue, slippageToleranceValue, estimate.estimatedOutput)
-      setAmountOutMin(amountOutMin)
+      const { amountOutMinFormatted } = await getAmountOutMin(web3Api.provider, convertValue, slippageToleranceValue, estimate.estimatedOutput)
+      setAmountOutMinFormatted(amountOutMinFormatted)
     }
 
     if (web3Api && web3Api.provider && convertValue > 0 && estimate.estimatedOutput) {
@@ -230,7 +230,7 @@ const FeeConverter = () => {
             onDeadlineChange={onDeadlineChange}
             deadline={deadline}
             estimate={estimate}
-            amountOutMin={amountOutMin}
+            amountOutMinFormatted={amountOutMinFormatted}
             slippageTooHigh={slippageTooHigh}
             loadingEstimate={loadingEstimate}
           />
@@ -267,7 +267,7 @@ const AccountInfo = ({ account, balance, isExpectedChainId }) => (
   </Col>
 );
 
-const ConvertInfo = ({ balance, convertValue, estimate, amountOutMin, loadingEstimate, slippageTooHigh, slippageToleranceValue }) => (
+const ConvertInfo = ({ balance, convertValue, estimate, amountOutMinFormatted, loadingEstimate, slippageTooHigh, slippageToleranceValue }) => (
   <Col span={24} style={{ marginTop: '0.5em' }}>
     {loadingEstimate && <Col span={24} className="">
       <p>Loading expected price...</p>
@@ -278,8 +278,8 @@ const ConvertInfo = ({ balance, convertValue, estimate, amountOutMin, loadingEst
         <div>Current BTRST Price: {estimate.currentPrice.toFixed(2)} USDC per BTRST</div>
         <div>Expected Swap Price: ~{estimate.estimatedPrice.toFixed(2)} USDC per BTRST</div>
         <div>Expected Slippage: ~{(estimate.estimatedSlippage * 100).toFixed(2)}%</div>
-        <div>Expected BTRST swapped: {estimate.estimatedOutput.toNumber().toFixed(2)} BTRST</div>
-        <div>Minimum BTRST swapped: {amountOutMin && amountOutMin.toNumber().toFixed(2)}</div>
+        <div>Expected BTRST swapped: {estimate.estimatedOutputFormatted} BTRST</div>
+        <div>Minimum BTRST swapped: {amountOutMinFormatted}</div>
       </div> : null}
       {estimate.error && <p className="wrapper__error">{estimate.error}</p>}
     </Col>}
@@ -312,7 +312,7 @@ const ConverterInput = ({
   onDeadlineChange,
   deadline,
   estimate,
-  amountOutMin,
+  amountOutMinFormatted,
   slippageTooHigh,
   loadingEstimate
 }) => (
@@ -351,7 +351,7 @@ const ConverterInput = ({
                 balance={balance}
                 convertValue={convertValue}
                 estimate={estimate}
-                amountOutMin={amountOutMin}
+                amountOutMinFormatted={amountOutMinFormatted}
                 slippageTooHigh={slippageTooHigh}
                 loadingEstimate={loadingEstimate}
                 slippageToleranceValue={slippageToleranceValue}
