@@ -1,6 +1,6 @@
 import Web3 from "web3";
 import { approveUSDC } from "./usdc";
-import { BTRST_ABI, CONTRACT_ABI, USDC_ABI } from "./abi";
+import { CONTRACT_ABI, USDC_ABI } from "./abi";
 import { abi as IUniswapV3PoolABI } from "@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json";
 import { abi as QUOTER_ABI } from "@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json";
 import { getERC20Decimal, getAmountOutMin } from "./shared";
@@ -15,8 +15,6 @@ export const swapToBTRST = async (provider, amountIn, slippage, estimatedAmountO
   try {
     const web3 = new Web3(provider);
     const CONVERTER_CONTRACT = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
-    const BTRST_CONTRACT = new web3.eth.Contract(BTRST_ABI, BTRST_ADDRESS);
-    const btrstDecimal = await getERC20Decimal(BTRST_CONTRACT)
 
     const accounts = await provider.request({
       method: "eth_requestAccounts"
@@ -26,10 +24,9 @@ export const swapToBTRST = async (provider, amountIn, slippage, estimatedAmountO
     const { amountOutMin, amountInBN } = await getAmountOutMin(provider, amountIn, slippage, estimatedAmountOut)
 
     const txnDeadline = Math.floor(Date.now() / 1000) + deadline
-    const amountOutMinimum = new web3.utils.toBN(amountOutMin).mul(new web3.utils.toBN(Math.pow(10, btrstDecimal)))
 
     return await CONVERTER_CONTRACT.methods
-      .swapExactInputSingle(amountInBN, amountOutMinimum, txnDeadline)
+      .swapExactInputSingle(amountInBN, amountOutMin, txnDeadline)
       .send({ from: accounts[0] })
       .then((transaction) => transaction.status);
   } catch (error) {
@@ -44,12 +41,10 @@ export const estimateBTRSTOutput = async (provider, convertValue) => {
     const web3 = new Web3(provider);
     const POOL_CONTRACT = new web3.eth.Contract(IUniswapV3PoolABI, POOL_ADDRESS, provider);
     const USDC_CONTRACT = new web3.eth.Contract(USDC_ABI, USDC_ADDRESS);
-    const BTRST_CONTRACT = new web3.eth.Contract(BTRST_ABI, BTRST_ADDRESS);
 
-    const [fee, USDC_decimals, BTRST_decimals] = await Promise.all([
+    const [fee, USDC_decimals] = await Promise.all([
       POOL_CONTRACT.methods.fee().call(),
       getERC20Decimal(USDC_CONTRACT),
-      getERC20Decimal(BTRST_CONTRACT),
     ]);
 
     const QUOTER_CONTRACT = new web3.eth.Contract(QUOTER_ABI, QUOTER_ADDRESS);
@@ -72,7 +67,8 @@ export const estimateBTRSTOutput = async (provider, convertValue) => {
     return {
       currentPrice: 1 / web3.utils.fromWei(currentPrice),
       estimatedPrice,
-      estimatedOutput: web3.utils.toBN(outputIncludingSlippage).div(web3.utils.toBN(Math.pow(10, BTRST_decimals))),
+      estimatedOutput: web3.utils.toBN(outputIncludingSlippage),
+      estimatedOutputFormatted: Math.floor(parseFloat(web3.utils.fromWei(outputIncludingSlippage)) * 100) / 100,
       estimatedSlippage,
       error,
     }
